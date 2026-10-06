@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum LearningStatus {
+  RUNNING
+  PAUSED
+  COMPLETED
+}
+
+model User {
+  id            String            @id
+  name          String
+  email         String            @unique
+  emailVerified Boolean           @default(false) @map("email_verified")
+  image         String?
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+  sessions      Session[]
+  accounts      Account[]
+  settings      UserSettings?
+  categories    Category[]
+  learning      LearningSession[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime @map("expires_at")
+  token     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                 String    @map("user_id")
+  accessToken            String?   @db.Text @map("access_token")
+  refreshToken           String?   @db.Text @map("refresh_token")
+  idToken                String?   @db.Text @map("id_token")
+  accessTokenExpiresAt   DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt  DateTime? @map("refresh_token_expires_at")
+  scope                  String?
+  password               String?
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([identifier])
+  @@map("verifications")
+}
+
+model UserSettings {
+  id                  String   @id @default(cuid())
+  userId              String   @unique @map("user_id")
+  timezone            String   @default("Asia/Bangkok")
+  timezoneInitialized Boolean  @default(false) @map("timezone_initialized")
+  dailyGoalMinutes    Int      @default(120) @map("daily_goal_minutes")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model Category {
+  id             String            @id @default(cuid())
+  userId         String            @map("user_id")
+  name           String
+  normalizedName String            @map("normalized_name")
+  createdAt      DateTime          @default(now()) @map("created_at")
+  updatedAt      DateTime          @updatedAt @map("updated_at")
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions       LearningSession[]
+
+  @@unique([userId, normalizedName])
+  @@index([userId])
+  @@map("categories")
+}
+
+model LearningSession {
+  id              String            @id @default(cuid())
+  userId          String            @map("user_id")
+  categoryId      String?           @map("category_id")
+  status          LearningStatus
+  startedAt       DateTime          @map("started_at")
+  endedAt         DateTime?         @map("ended_at")
+  durationSeconds Int?              @map("duration_seconds")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category        Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  intervals       SessionInterval[]
+
+  @@index([userId, startedAt])
+  @@index([categoryId])
+  @@map("learning_sessions")
+}
+
+model SessionInterval {
+  id        String          @id @default(cuid())
+  sessionId String          @map("session_id")
+  startedAt DateTime        @map("started_at")
+  endedAt   DateTime?       @map("ended_at")
+  createdAt DateTime        @default(now()) @map("created_at")
+  session   LearningSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, startedAt])
+  @@map("session_intervals")
+}
