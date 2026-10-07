@@ -153,6 +153,7 @@ export const CategoryScalarFieldEnum = {
   userId: 'userId',
   name: 'name',
   normalizedName: 'normalizedName',
+  colorKey: 'colorKey',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

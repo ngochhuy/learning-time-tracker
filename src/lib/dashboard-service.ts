@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 type IntervalInput = { startedAt: Date; endedAt: Date | null; session: { category: { id: string; name: string } | null } };
 
 export type CategoryTotal = { id: string | null; name: string; seconds: number };
+export type WeekDayTotal = { date: string; label: string; seconds: number; isToday: boolean };
 
 /** Allocate real study intervals to local calendar days, including DST days. */
 export function allocateIntervalsByDay(intervals: IntervalInput[], timezone: string) {
@@ -49,7 +50,6 @@ export async function getDashboardData(userId: string) {
     include: { session: { select: { category: { select: { id: true, name: true } } } } },
     orderBy: { startedAt: "desc" },
   });
-  const allocated = allocateIntervalsByDay(intervals, zone);
   const rangeStart = now.startOf("week").toUTC().toJSDate();
   const rangeEnd = now.toUTC().toJSDate();
   const weeklyIntervals = intervals.map((interval) => ({
@@ -59,12 +59,49 @@ export async function getDashboardData(userId: string) {
   })).filter((interval) => interval.endedAt > interval.startedAt);
   const weeklyAllocation = allocateIntervalsByDay(weeklyIntervals, zone);
   const weekSeconds = [...weeklyAllocation.dayTotals.entries()].filter(([day]) => day >= weekStart && day <= today).reduce((sum, [, seconds]) => sum + seconds, 0);
-  const todaySeconds = allocated.dayTotals.get(today) ?? 0;
-  const recent = await db.learningSession.findMany({
+  const todayStart = now.startOf("day").toUTC().toJSDate();
+  const todayEnd = now.toUTC().toJSDate();
+  const todayIntervals = intervals.map((interval) => ({
+    ...interval,
+    startedAt: interval.startedAt < todayStart ? todayStart : interval.startedAt,
+    endedAt: interval.endedAt! > todayEnd ? todayEnd : interval.endedAt!,
+  })).filter((interval) => interval.endedAt > interval.startedAt);
+  const todayAllocation = allocateIntervalsByDay(todayIntervals, zone);
+  const todaySeconds = todayAllocation.dayTotals.get(today) ?? 0;
+  const weekDays: WeekDayTotal[] = Array.from({ length: 7 }, (_, index) => {
+    const date = now.startOf("week").plus({ days: index });
+    const isoDate = date.toISODate()!;
+    return {
+      date: isoDate,
+      label: ["T2", "T3", "T4", "T5", "T6", "T7", "CN"][index]!,
+      seconds: weeklyAllocation.dayTotals.get(isoDate) ?? 0,
+      isToday: isoDate === today,
+    };
+  });
+  const [recent, sessionAggregate] = await Promise.all([
+    db.learningSession.findMany({
     where: { userId, status: "COMPLETED" },
     include: { category: { select: { name: true } } },
     orderBy: { endedAt: "desc" },
     take: 5,
-  });
-  return { timezone: zone, dailyGoalMinutes: settings.dailyGoalMinutes, todaySeconds, weekSeconds, categories: weeklyAllocation.categories, recent };
+    }),
+    db.learningSession.aggregate({
+      where: { userId, status: "COMPLETED" },
+      _avg: { durationSeconds: true },
+      _count: { id: true },
+    }),
+  ]);
+  return {
+    timezone: zone,
+    todayLabel: now.setLocale("vi").toFormat("d/M/yyyy"),
+    dailyGoalMinutes: settings.dailyGoalMinutes,
+    todaySeconds,
+    weekSeconds,
+    weekDays,
+    categories: weeklyAllocation.categories,
+    todayCategories: todayAllocation.categories,
+    recent,
+    completedSessionCount: sessionAggregate._count.id,
+    averageSessionSeconds: Math.round(sessionAggregate._avg.durationSeconds ?? 0),
+  };
 }

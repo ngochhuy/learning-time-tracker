@@ -22,7 +22,10 @@ export const metadata: Metadata = {
     template: "%s · ForcusLearn",
   },
   description: "Theo dõi thời gian học thực tế, rõ ràng và không gián đoạn.",
-  icons: { icon: "/favicon.svg" },
+  icons: {
+    icon: [{ url: "/favicon.svg?v=matcha-leaf", type: "image/svg+xml", sizes: "any" }],
+    shortcut: ["/favicon.svg?v=matcha-leaf"],
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

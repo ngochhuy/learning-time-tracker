@@ -12,6 +12,7 @@ export const errorMessages = {
   INVALID_TIMEZONE: "Múi giờ không hợp lệ.",
   UNAUTHORIZED: "Bạn cần đăng nhập để tiếp tục.",
   TRANSACTION_CONFLICT: "Dữ liệu vừa thay đổi. Vui lòng thử lại.",
+  PRISMA_CLIENT_OUTDATED: "Ứng dụng cần cập nhật database và khởi động lại server trước khi tạo danh mục.",
   UNKNOWN: "Đã có lỗi xảy ra. Vui lòng thử lại.",
 } as const;
 
@@ -32,6 +33,12 @@ export function toActionError(error: unknown): ActionResult<never> {
   if (error instanceof AppError) {
     return { ok: false, code: error.code, message: error.message };
   }
-  logger.error("application_action_error", { error });
+  logger.error("application_action_error", {
+    error,
+    ...(process.env.NODE_ENV !== "production" && error instanceof Error ? { detail: error.message } : {}),
+  });
+  if (error instanceof Error && error.name === "PrismaClientValidationError") {
+    return { ok: false, code: "PRISMA_CLIENT_OUTDATED", message: errorMessages.PRISMA_CLIENT_OUTDATED };
+  }
   return { ok: false, code: "UNKNOWN", message: errorMessages.UNKNOWN };
 }

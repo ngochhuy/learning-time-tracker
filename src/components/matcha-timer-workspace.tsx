@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, useTransition, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
 import Link from "next/link";
-import { AudioLines, CheckCircle2, ChevronDown, CirclePause, Clock3, Coffee, Edit3, FolderOpen, History, Leaf, Play, Sparkles, TimerReset, Trash2, X } from "lucide-react";
+import { AudioLines, CheckCircle2, ChevronDown, CirclePause, Clock3, Coffee, Edit3, History, Leaf, PictureInPicture2, Play, Sparkles, TimerReset, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { AuthControls } from "@/components/auth-controls";
+import { MatchaAppSidebar } from "@/components/matcha-app-sidebar";
+import { MatchaAppHeader } from "@/components/matcha-app-header";
 import { cancelSession, changeSessionCategory, finishSession, pauseSession, resumeSession, startSession } from "@/app/actions/timer";
 import { formatDuration } from "@/lib/utils";
 import type { LearningStatus } from "@/generated/prisma/client";
@@ -28,7 +29,18 @@ type Props = {
   databaseUnavailable?: boolean;
 };
 
+type DocumentPictureInPictureApi = {
+  requestWindow: (options?: { width?: number; height?: number }) => Promise<Window>;
+};
+
+declare global {
+  interface Window {
+    documentPictureInPicture?: DocumentPictureInPictureApi;
+  }
+}
+
 const MOCK_SESSION_GOAL = "Hoàn thành bài tập Thuật toán và đọc tài liệu về giao dịch phân tán.";
+const subscribeToPictureInPictureAvailability = () => () => undefined;
 
 function getElapsedSeconds(session: MatchaSession, now: number) {
   return session.intervals.reduce((total, interval) => {
@@ -53,13 +65,24 @@ export function MatchaTimerWorkspace({ session, categories, user, developmentByp
   const [focusSound, setFocusSound] = useState(false);
   const [sessionGoal, setSessionGoal] = useState(MOCK_SESSION_GOAL);
   const [message, setMessage] = useState<string | null>(null);
+  const pipSupported = useSyncExternalStore(
+    subscribeToPictureInPictureAvailability,
+    () => Boolean(window.documentPictureInPicture),
+    () => false,
+  );
+  const [pipOpen, setPipOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const pipWindowRef = useRef<Window | null>(null);
+  const toggleRunRef = useRef<() => void>(() => undefined);
+  const finishSessionRef = useRef<() => void>(() => undefined);
 
   useEffect(() => {
     if (session?.status !== "RUNNING") return;
     const interval = window.setInterval(() => setNow(Date.now()), 1_000);
     return () => window.clearInterval(interval);
   }, [session?.status]);
+
+  useEffect(() => () => pipWindowRef.current?.close(), []);
 
   useEffect(() => {
     function handleShortcut(event: KeyboardEvent) {
@@ -115,19 +138,63 @@ export function MatchaTimerWorkspace({ session, categories, user, developmentByp
     run(() => cancelSession(session.id));
   }
 
-  return <main className={`min-h-dvh bg-[#f6f8f5] font-[family-name:var(--font-inter)] text-[#1b2e21] ${zen ? "lg:pl-0" : "lg:pl-72"}`}>
-    {!zen && <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 flex-col justify-between border-r border-[#e1e8df] bg-[#f0f4ed] p-6 lg:flex">
-      <div className="flex flex-col gap-10">
-        <Link href="/" className="flex items-center gap-3"><span className="grid size-8 place-items-center rounded-lg bg-[#2e5339] text-white shadow-sm"><Leaf size={18} /></span><span className="flex flex-col"><strong className="font-[family-name:var(--font-geist)] text-lg font-semibold tracking-[-.03em] text-[#2e5339]">ForcusLearn</strong><small className="text-[10px] font-semibold uppercase tracking-[.15em] text-[#708071]">Matcha & Sage Edition</small></span></Link>
-        <nav aria-label="Điều hướng chính" className="flex flex-col gap-1"><NavLink active href="/" icon={<Clock3 size={20} />}>Timer</NavLink><NavLink href="/dashboard" icon={<Sparkles size={20} />}>Thống kê</NavLink><NavLink href="/history" icon={<History size={20} />}>Lịch sử</NavLink><NavLink href="/categories" icon={<FolderOpen size={20} />}>Danh mục</NavLink></nav>
-      </div>
-      <div className="rounded-xl border border-[#e1e8df] bg-[#ffffff] p-3 shadow-sm"><div className="flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#dcedda] text-xs font-bold text-[#2e5339]">{user.name.slice(0, 1).toUpperCase()}</span><div className="min-w-0"><p className="truncate text-xs font-semibold">{user.name}</p><p className="text-[11px] text-[#708071]">{developmentBypass ? "Development" : "Học viên"}</p></div></div><span className="flex shrink-0 items-center gap-1 rounded-full bg-[#e2eee1] px-2 py-0.5 text-[10px] font-semibold text-[#2e5339]"><i className="size-1.5 rounded-full bg-[#2e5339]" />Tập trung</span></div><div className="mt-2 border-t border-[#e1e8df] pt-2"><AuthControls name="" developmentBypass={developmentBypass} /></div></div>
-    </aside>}
+  toggleRunRef.current = toggleRun;
+  finishSessionRef.current = () => {
+    if (session) run(() => finishSession(session.id));
+  };
 
-    <header className={`${zen ? "hidden" : "sticky top-0 z-30"} flex h-16 items-center justify-between border-b border-[#e1e8df] bg-[#f6f8f5]/90 px-4 backdrop-blur-xl sm:px-6 lg:px-10`}>
-      <div className="flex items-center gap-2 text-xs font-medium text-[#3c4f41]"><Leaf size={16} className="text-[#2e5339]" /><span>{timezone}</span><span className="text-[#a5b0a4]">•</span><span className="hidden sm:inline">Chế độ học sâu thảo mộc</span></div>
-      <div className="flex items-center gap-2"><button type="button" aria-pressed={focusSound} className="hidden items-center gap-2 rounded-lg border border-[#e1e8df] bg-[#f0f4ed] px-3 py-1.5 text-xs font-medium transition hover:bg-[#e6ece2] sm:inline-flex" onClick={() => setFocusSound((value) => !value)}><AudioLines size={15} className="text-[#2e5339]" />Âm thanh {focusSound ? "bật" : "tắt"}<span className="rounded bg-[#dcedda] px-1 text-[9px]">mock</span></button><button type="button" className="rounded-lg border border-[#e1e8df] bg-[#f0f4ed] px-3 py-1.5 text-xs font-medium transition hover:bg-[#e6ece2]" onClick={() => setZen(true)}>Chế độ Zen</button></div>
-    </header>
+  const updatePictureInPicture = useCallback(() => {
+    const pipDocument = pipWindowRef.current?.document;
+    if (!pipDocument) return;
+    const timer = pipDocument.getElementById("focuslearn-pip-timer");
+    const category = pipDocument.getElementById("focuslearn-pip-category");
+    const status = pipDocument.getElementById("focuslearn-pip-status");
+    const primary = pipDocument.getElementById("focuslearn-pip-primary") as HTMLButtonElement | null;
+    const finish = pipDocument.getElementById("focuslearn-pip-finish") as HTMLButtonElement | null;
+    if (timer) timer.textContent = `${hours}:${minutes}:${seconds}`;
+    if (category) category.textContent = categoryName;
+    if (status) status.textContent = statusText;
+    if (primary) { primary.textContent = !session ? "Bắt đầu học" : isRunning ? "Tạm dừng" : "Tiếp tục học"; primary.disabled = disabled; }
+    if (finish) { finish.disabled = !session || disabled; }
+  }, [categoryName, disabled, hours, isRunning, minutes, seconds, session, statusText]);
+
+  useEffect(() => {
+    updatePictureInPicture();
+  }, [updatePictureInPicture]);
+
+  async function openPictureInPicture() {
+    const pictureInPicture = window.documentPictureInPicture;
+    if (!pictureInPicture) {
+      setMessage("Trình duyệt này chưa hỗ trợ Cửa sổ nổi. Hãy dùng Chrome hoặc Edge trên máy tính.");
+      return;
+    }
+    if (pipWindowRef.current && !pipWindowRef.current.closed) {
+      pipWindowRef.current.focus();
+      return;
+    }
+    try {
+      const pipWindow = await pictureInPicture.requestWindow({ width: 390, height: 270 });
+      pipWindowRef.current = pipWindow;
+      pipWindow.document.title = "ForcusLearn Timer";
+      pipWindow.document.head.innerHTML = `<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><style>:root{color-scheme:light}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#f6f8f5;color:#1b2e21;font-family:Inter,Arial,sans-serif}*{box-sizing:border-box}body{padding:clamp(8px,4vw,16px)}.card{width:100%;height:100%;min-width:0;min-height:0;overflow:hidden;border:1px solid #d2ddd0;border-radius:clamp(14px,6vw,20px);background:#fff;padding:clamp(10px,5vw,18px);box-shadow:0 12px 30px rgba(27,46,33,.12);display:flex;flex-direction:column;justify-content:space-between;gap:clamp(10px,4vh,18px)}.top{display:flex;min-width:0;align-items:center;justify-content:space-between;gap:8px;color:#54735c;font-size:clamp(10px,3.2vw,12px);font-weight:700}.category{min-width:0;max-width:58%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:999px;background:#f0f4ed;padding:clamp(5px,2.4vw,7px) clamp(7px,3vw,10px)}.live{display:flex;min-width:0;flex:1;justify-content:flex-end;gap:clamp(4px,2vw,6px);align-items:center;white-space:nowrap}.dot{width:clamp(7px,2.4vw,8px);height:clamp(7px,2.4vw,8px);flex:0 0 auto;border-radius:50%;background:#2e5339}.timer{max-width:100%;overflow:hidden;text-align:center;font-family:Geist,Arial,sans-serif;font-size:clamp(32px,16vw,54px);font-weight:700;line-height:.92;letter-spacing:-.06em;color:#2e5339;font-variant-numeric:tabular-nums}.status{margin:clamp(10px,4vh,16px) 0 0;text-align:center;color:#54735c;font-size:clamp(10px,3.2vw,12px);font-weight:600;line-height:1.25}.actions{display:flex;min-width:0;gap:clamp(6px,3vw,8px)}.primary,.secondary{min-width:0;flex:1;border-radius:10px;padding:clamp(9px,3.2vw,11px) clamp(6px,2.4vw,11px);border:1px solid #d2ddd0;font-size:clamp(11px,3.8vw,14px);font-weight:700;line-height:1.15;white-space:nowrap;cursor:pointer}.primary{background:#2e5339;color:#fff;border-color:#2e5339}.secondary{background:#f0f4ed;color:#1b2e21}.primary:disabled,.secondary:disabled{opacity:.45;cursor:not-allowed}@media (max-width:220px){.top{font-size:9px}.live{letter-spacing:-.04em}.actions{gap:5px}.primary,.secondary{font-size:10px;padding:8px 4px}}</style>`;
+      pipWindow.document.body.innerHTML = `<main class="card"><div class="top"><span class="category" id="focuslearn-pip-category"></span><span class="live"><i class="dot"></i>FORCUSLEARN</span></div><div><div class="timer" id="focuslearn-pip-timer"></div><p class="status" id="focuslearn-pip-status"></p></div><div class="actions"><button class="primary" id="focuslearn-pip-primary"></button><button class="secondary" id="focuslearn-pip-finish">Kết thúc</button></div></main>`;
+      pipWindow.document.getElementById("focuslearn-pip-primary")?.addEventListener("click", () => toggleRunRef.current());
+      pipWindow.document.getElementById("focuslearn-pip-finish")?.addEventListener("click", () => finishSessionRef.current());
+      pipWindow.addEventListener("pagehide", () => { pipWindowRef.current = null; setPipOpen(false); }, { once: true });
+      setPipOpen(true);
+      updatePictureInPicture();
+    } catch {
+      setMessage("Không thể mở Cửa sổ nổi. Hãy cho phép cửa sổ này trong trình duyệt rồi thử lại.");
+    }
+  }
+
+  return <main className={`min-h-dvh bg-[#f6f8f5] font-[family-name:var(--font-inter)] text-[#1b2e21] ${zen ? "lg:pl-0" : "lg:pl-72"}`}>
+    {!zen && <MatchaAppSidebar active="timer" user={user} developmentBypass={developmentBypass} />}
+
+    {!zen && <MatchaAppHeader
+      left={<div className="flex items-center gap-2 text-xs font-medium text-[#3c4f41]"><Leaf size={16} className="text-[#2e5339]" /><span>{timezone}</span><span className="text-[#a5b0a4]">•</span><span className="hidden sm:inline">Chế độ học sâu thảo mộc</span></div>}
+      right={<><button type="button" aria-pressed={focusSound} className="hidden items-center gap-2 rounded-lg border border-[#e1e8df] bg-[#f0f4ed] px-3 py-1.5 text-xs font-medium transition hover:bg-[#e6ece2] sm:inline-flex" onClick={() => setFocusSound((value) => !value)}><AudioLines size={15} className="text-[#2e5339]" />Âm thanh {focusSound ? "bật" : "tắt"}<span className="rounded bg-[#dcedda] px-1 text-[9px]">mock</span></button><button type="button" className="rounded-lg border border-[#e1e8df] bg-[#f0f4ed] px-3 py-1.5 text-xs font-medium transition hover:bg-[#e6ece2]" onClick={() => setZen(true)}>Chế độ Zen</button></>}
+    />}
 
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <nav className="mb-5 flex gap-2 overflow-x-auto lg:hidden" aria-label="Điều hướng mobile"><NavLink active href="/" icon={<Clock3 size={16} />}>Timer</NavLink><NavLink href="/dashboard" icon={<Sparkles size={16} />}>Thống kê</NavLink><NavLink href="/history" icon={<History size={16} />}>Lịch sử</NavLink></nav>
@@ -140,7 +207,7 @@ export function MatchaTimerWorkspace({ session, categories, user, developmentByp
       <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
         <section className="flex flex-col gap-6 lg:col-span-8">
           <div className="relative flex min-h-[460px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-[#e1e8df] bg-[#ffffff] p-6 shadow-sm sm:p-10"><div className="pointer-events-none absolute -top-24 left-1/2 size-80 -translate-x-1/2 rounded-full bg-[#d8e8d6]/55 blur-3xl" />
-            <div className="relative z-10 mb-6 flex w-full items-center justify-between gap-3"><div className="relative"><button type="button" aria-expanded={categoryOpen} className="inline-flex items-center gap-2 rounded-full border border-[#e1e8df] bg-[#f0f4ed] px-3 py-1.5 text-sm font-medium shadow-sm transition hover:bg-[#e6ece2]" onClick={() => setCategoryOpen((open) => !open)}><span className="size-2.5 rounded-full bg-[#2e5339]" />{categoryName}<ChevronDown size={16} className="text-[#3c4f41]" /></button>{categoryOpen && <div className="absolute left-0 top-full z-20 mt-2 w-56 rounded-xl border border-[#e1e8df] bg-[#ffffff] p-1.5 shadow-xl"><CategoryOption active={!selectedCategoryId} name="Chưa phân loại" onClick={() => selectCategory("")} />{categories.map((category) => <CategoryOption active={category.id === selectedCategoryId} key={category.id} name={category.name} onClick={() => selectCategory(category.id)} />)}</div>}</div><button type="button" className="inline-flex items-center gap-1.5 rounded-full bg-[#f0f4ed] px-3 py-1.5 text-xs font-medium text-[#3c4f41] transition hover:bg-[#e6ece2]" onClick={() => setZen(true)}><TimerReset size={15} className="text-[#2e5339]" /><span className="hidden sm:inline">Chế độ Zen</span></button></div>
+            <div className="relative z-10 mb-6 flex w-full items-center justify-between gap-3"><div className="relative"><button type="button" aria-expanded={categoryOpen} className="inline-flex items-center gap-2 rounded-full border border-[#e1e8df] bg-[#f0f4ed] px-3 py-1.5 text-sm font-medium shadow-sm transition hover:bg-[#e6ece2]" onClick={() => setCategoryOpen((open) => !open)}><span className="size-2.5 rounded-full bg-[#2e5339]" />{categoryName}<ChevronDown size={16} className="text-[#3c4f41]" /></button>{categoryOpen && <div className="absolute left-0 top-full z-20 mt-2 w-56 rounded-xl border border-[#e1e8df] bg-[#ffffff] p-1.5 shadow-xl"><CategoryOption active={!selectedCategoryId} name="Chưa phân loại" onClick={() => selectCategory("")} />{categories.map((category) => <CategoryOption active={category.id === selectedCategoryId} key={category.id} name={category.name} onClick={() => selectCategory(category.id)} />)}</div>}</div><div className="flex items-center gap-2">{pipSupported && <button type="button" aria-pressed={pipOpen} title="Mở timer trong cửa sổ nổi" className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${pipOpen ? "bg-[#d8e8d6] text-[#2e5339]" : "bg-[#f0f4ed] text-[#3c4f41] hover:bg-[#e6ece2]"}`} onClick={openPictureInPicture}><PictureInPicture2 size={15} /><span className="hidden sm:inline">Cửa sổ nổi</span></button>}<button type="button" className="inline-flex items-center gap-1.5 rounded-full bg-[#f0f4ed] px-3 py-1.5 text-xs font-medium text-[#3c4f41] transition hover:bg-[#e6ece2]" onClick={() => setZen(true)}><TimerReset size={15} className="text-[#2e5339]" /><span className="hidden sm:inline">Chế độ Zen</span></button></div></div>
             <div className="relative z-10 my-6 flex items-center justify-center"><div className="relative grid size-72 place-items-center sm:size-80"><svg className="absolute inset-0 size-full -rotate-90" viewBox="0 0 280 280" aria-hidden="true"><circle cx="140" cy="140" r="126" fill="transparent" stroke="#d8e8d6" strokeWidth="4" /><circle cx="140" cy="140" r="126" fill="transparent" stroke="#2e5339" strokeWidth="5" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeOffset} className="transition-[stroke-dashoffset] duration-700" /></svg><div className="relative flex max-w-[78%] flex-col items-center text-center"><div className="whitespace-nowrap font-[family-name:var(--font-geist)] text-[48px] font-semibold leading-none tracking-[-.055em] text-[#2e5339] tabular-nums sm:text-[64px]"><span>{hours}</span><span className="mx-0.5 font-normal text-[#d2ddd0]">:</span><span>{minutes}</span><span className="mx-0.5 font-normal text-[#d2ddd0]">:</span><span>{seconds}</span></div><div className="mt-3 inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-[#d2ddd0] bg-[#e2eee1] px-3 py-1 text-xs font-medium text-[#2e5339]"><span className={`size-2 rounded-full ${isRunning ? "animate-ping bg-[#2e5339]" : "bg-[#9eaa9d]"}`} />{statusText}</div></div></div></div>
             <div className="relative z-10 mt-2 flex w-full flex-wrap justify-center gap-4">{!session ? <button className="inline-flex items-center justify-center gap-3 rounded-xl bg-[#2e5339] px-10 py-3.5 font-[family-name:var(--font-geist)] text-lg font-medium text-white shadow-sm transition active:scale-95 hover:bg-[#385a3e] disabled:opacity-50" disabled={disabled} onClick={toggleRun}><Play size={22} fill="currentColor" />{pending ? "Đang bắt đầu…" : "Bắt đầu học"}</button> : <><button className="inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#2e5339] px-8 py-3 font-[family-name:var(--font-geist)] text-lg font-medium text-white shadow-sm transition active:scale-95 hover:bg-[#385a3e] disabled:opacity-50" disabled={disabled} onClick={toggleRun}>{isRunning ? <CirclePause size={22} /> : <Play size={22} fill="currentColor" />}{isRunning ? "Tạm dừng" : "Tiếp tục học"}</button><button className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e1e8df] bg-[#f0f4ed] px-7 py-3 font-[family-name:var(--font-geist)] text-lg font-medium shadow-sm transition hover:bg-[#e6ece2] disabled:opacity-50" disabled={disabled} onClick={() => run(() => finishSession(session.id))}><CheckCircle2 size={21} className="text-[#2e5339]" />Kết thúc phiên</button></>}</div>
           </div>
