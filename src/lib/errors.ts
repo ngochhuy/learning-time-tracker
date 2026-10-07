@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger";
+
 export const errorMessages = {
   ACTIVE_SESSION_EXISTS: "Bạn đang có một phiên học khác.",
   SESSION_NOT_FOUND: "Không tìm thấy phiên học.",
@@ -30,6 +32,6 @@ export function toActionError(error: unknown): ActionResult<never> {
   if (error instanceof AppError) {
     return { ok: false, code: error.code, message: error.message };
   }
-  console.error("Unhandled application error", error);
+  logger.error("application_action_error", { error });
   return { ok: false, code: "UNKNOWN", message: errorMessages.UNKNOWN };
 }

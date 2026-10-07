@@ -101,7 +101,7 @@ export function TimerConsole({ session, categories, databaseUnavailable = false 
         {!session ? <button className="button button--primary button--large" disabled={disabled} onClick={() => run(() => startSession(selectedCategoryId || null))}><Play size={18} fill="currentColor" />{isPending ? "Đang bắt đầu..." : "Học ngay"}</button> : <>
           {session.status === "RUNNING" ? <button className="button button--primary" disabled={disabled} onClick={() => run(() => pauseSession(session.id))}><Pause size={18} fill="currentColor" />{isPending ? "Đang lưu..." : "Tạm dừng"}</button> : <button className="button button--primary" disabled={disabled} onClick={() => run(() => resumeSession(session.id))}><Play size={18} fill="currentColor" />{isPending ? "Đang tiếp tục..." : "Tiếp tục"}</button>}
           <button className="button button--secondary" disabled={disabled} onClick={() => run(() => finishSession(session.id))}><Square size={16} fill="currentColor" />Kết thúc</button>
-          <button className="icon-button" disabled={disabled} onClick={() => run(() => cancelSession(session.id))} aria-label="Hủy phiên học"><RotateCcw size={18} /></button>
+          <button className="icon-button" disabled={disabled} onClick={() => { if (window.confirm("Hủy phiên học hiện tại? Thời gian chưa hoàn thành sẽ không được lưu.")) run(() => cancelSession(session.id)); }} aria-label="Hủy phiên học"><RotateCcw size={18} /></button>
         </>}
       </div>
       <div className="timer-footer"><TimerReset size={15} /><span>{session ? "Khôi phục được sau khi tải lại trang" : "Không chọn danh mục vẫn có thể bắt đầu"}</span></div>
