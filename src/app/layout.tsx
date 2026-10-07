@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Geist, Inter } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -9,17 +9,17 @@ const inter = Inter({
   fallback: ["Arial", "sans-serif"],
 });
 
-const playfairDisplay = Playfair_Display({
+const geist = Geist({
   subsets: ["latin", "latin-ext", "vietnamese"],
   display: "swap",
-  variable: "--font-display",
-  fallback: ["Georgia", "Times New Roman", "serif"],
+  variable: "--font-geist",
+  fallback: ["Arial", "sans-serif"],
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "Nhịp Học",
-    template: "%s · Nhịp Học",
+    default: "ForcusLearn",
+    template: "%s · ForcusLearn",
   },
   description: "Theo dõi thời gian học thực tế, rõ ràng và không gián đoạn.",
   icons: { icon: "/favicon.svg" },
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="vi" className={`${inter.variable} ${playfairDisplay.variable} h-full antialiased`}>
+    <html lang="vi" className={`${inter.variable} ${geist.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

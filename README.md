@@ -1,6 +1,6 @@
-# Nhịp Học — Learning Time Tracker
+# ForcusLearn — Learning Time Tracker
 
-Ứng dụng web theo dõi thời gian học cá nhân. Nhịp Học giúp bạn bắt đầu nhanh một phiên tập trung, tạm dừng khi cần, phân loại nội dung học và xem lại tiến độ theo ngày hoặc tuần.
+Ứng dụng web theo dõi thời gian học cá nhân. ForcusLearn giúp bạn bắt đầu nhanh một phiên tập trung, tạm dừng khi cần, phân loại nội dung học và xem lại tiến độ theo ngày hoặc tuần.
 
 ## Tính năng MVP
 
@@ -171,4 +171,3 @@ Các điểm bắt buộc trước khi public:
 
 - [PROJECT_REPORT.md](./PROJECT_REPORT.md): báo cáo chi tiết về các phase và tính năng đã triển khai.
 - [DEPLOYMENT.md](./DEPLOYMENT.md): checklist deploy Neon, Vercel và Google OAuth.
-

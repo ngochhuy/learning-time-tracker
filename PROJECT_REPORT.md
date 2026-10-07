@@ -1,4 +1,4 @@
-# Báo cáo triển khai — Learning Time Tracker
+# Báo cáo triển khai — ForcusLearn
 
 Ngày cập nhật: 07/10/2026
 
@@ -179,4 +179,3 @@ Các tính năng sau chưa được triển khai theo đúng phạm vi đã ch�
 - Biểu đồ/analytics nâng cao.
 - Email/password login.
 - Notifications, đa ngôn ngữ và lịch sử thay đổi Daily Goal.
-

@@ -9,7 +9,7 @@ export const isGoogleAuthConfigured = Boolean(
 );
 
 export const auth = betterAuth({
-  appName: "Nhịp Học",
+  appName: "ForcusLearn",
   database: prismaAdapter(db, { provider: "postgresql" }),
   secret:
     process.env.BETTER_AUTH_SECRET ??
