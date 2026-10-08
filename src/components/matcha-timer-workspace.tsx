@@ -85,6 +85,14 @@ export function MatchaTimerWorkspace({ session, categories, user, developmentByp
   useEffect(() => () => pipWindowRef.current?.close(), []);
 
   useEffect(() => {
+    function syncPictureInPictureTheme() {
+      pipWindowRef.current?.document.documentElement.classList.toggle("dark", document.documentElement.classList.contains("dark"));
+    }
+    window.addEventListener("focuslearn-theme-change", syncPictureInPictureTheme);
+    return () => window.removeEventListener("focuslearn-theme-change", syncPictureInPictureTheme);
+  }, []);
+
+  useEffect(() => {
     function handleShortcut(event: KeyboardEvent) {
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, select, button")) return;
@@ -176,7 +184,9 @@ export function MatchaTimerWorkspace({ session, categories, user, developmentByp
       const pipWindow = await pictureInPicture.requestWindow({ width: 390, height: 270 });
       pipWindowRef.current = pipWindow;
       pipWindow.document.title = "ForcusLearn Timer";
+      pipWindow.document.documentElement.classList.toggle("dark", document.documentElement.classList.contains("dark"));
       pipWindow.document.head.innerHTML = `<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><style>:root{color-scheme:light}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#f6f8f5;color:#1b2e21;font-family:Inter,Arial,sans-serif}*{box-sizing:border-box}body{padding:clamp(8px,4vw,16px)}.card{width:100%;height:100%;min-width:0;min-height:0;overflow:hidden;border:1px solid #d2ddd0;border-radius:clamp(14px,6vw,20px);background:#fff;padding:clamp(10px,5vw,18px);box-shadow:0 12px 30px rgba(27,46,33,.12);display:flex;flex-direction:column;justify-content:space-between;gap:clamp(10px,4vh,18px)}.top{display:flex;min-width:0;align-items:center;justify-content:space-between;gap:8px;color:#54735c;font-size:clamp(10px,3.2vw,12px);font-weight:700}.category{min-width:0;max-width:58%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-radius:999px;background:#f0f4ed;padding:clamp(5px,2.4vw,7px) clamp(7px,3vw,10px)}.live{display:flex;min-width:0;flex:1;justify-content:flex-end;gap:clamp(4px,2vw,6px);align-items:center;white-space:nowrap}.dot{width:clamp(7px,2.4vw,8px);height:clamp(7px,2.4vw,8px);flex:0 0 auto;border-radius:50%;background:#2e5339}.timer{max-width:100%;overflow:hidden;text-align:center;font-family:Geist,Arial,sans-serif;font-size:clamp(32px,16vw,54px);font-weight:700;line-height:.92;letter-spacing:-.06em;color:#2e5339;font-variant-numeric:tabular-nums}.status{margin:clamp(10px,4vh,16px) 0 0;text-align:center;color:#54735c;font-size:clamp(10px,3.2vw,12px);font-weight:600;line-height:1.25}.actions{display:flex;min-width:0;gap:clamp(6px,3vw,8px)}.primary,.secondary{min-width:0;flex:1;border-radius:10px;padding:clamp(9px,3.2vw,11px) clamp(6px,2.4vw,11px);border:1px solid #d2ddd0;font-size:clamp(11px,3.8vw,14px);font-weight:700;line-height:1.15;white-space:nowrap;cursor:pointer}.primary{background:#2e5339;color:#fff;border-color:#2e5339}.secondary{background:#f0f4ed;color:#1b2e21}.primary:disabled,.secondary:disabled{opacity:.45;cursor:not-allowed}@media (max-width:220px){.top{font-size:9px}.live{letter-spacing:-.04em}.actions{gap:5px}.primary,.secondary{font-size:10px;padding:8px 4px}}</style>`;
+      pipWindow.document.head.insertAdjacentHTML("beforeend", `<style>html.dark{color-scheme:dark}html.dark,html.dark body{background:#101712;color:#e7f0e7}html.dark .card{background:#1b251d;border-color:#3d503f;box-shadow:0 12px 30px rgba(0,0,0,.32)}html.dark .top,html.dark .status{color:#b6c6b8}html.dark .category,html.dark .secondary{background:#1a241c;border-color:#3d503f;color:#e7f0e7}html.dark .timer{color:#bee1c3}html.dark .dot,html.dark .primary{background:#3f714a;border-color:#3f714a}</style>`);
       pipWindow.document.body.innerHTML = `<main class="card"><div class="top"><span class="category" id="focuslearn-pip-category"></span><span class="live"><i class="dot"></i>FORCUSLEARN</span></div><div><div class="timer" id="focuslearn-pip-timer"></div><p class="status" id="focuslearn-pip-status"></p></div><div class="actions"><button class="primary" id="focuslearn-pip-primary"></button><button class="secondary" id="focuslearn-pip-finish">Kết thúc</button></div></main>`;
       pipWindow.document.getElementById("focuslearn-pip-primary")?.addEventListener("click", () => toggleRunRef.current());
       pipWindow.document.getElementById("focuslearn-pip-finish")?.addEventListener("click", () => finishSessionRef.current());

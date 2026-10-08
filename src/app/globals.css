@@ -35,6 +35,42 @@ html { background: var(--background); }
 body { background: var(--background); color: var(--foreground); font-family: var(--font-inter), system-ui, sans-serif; font-size: 16px; line-height: 1.5; font-synthesis: none; text-rendering: optimizeLegibility; }
 button { font: inherit; }
 
+/* Matcha & Sage dark palette. Existing screens use the light palette directly
+   in Tailwind utilities, so these targeted overrides keep every shared surface
+   and its layout intact while changing only the visual tokens. */
+html.dark { color-scheme: dark; --background: #101712; --foreground: #e7f0e7; }
+html.dark body { background: #101712; color: #e7f0e7; }
+html.dark main { background: #101712 !important; color: #e7f0e7; }
+html.dark [class*="bg-[#f6f8f5]"],
+html.dark [class*="bg-[#eaffeb]"] { background-color: #101712 !important; }
+html.dark .bg-white,
+html.dark [class*="bg-[#ffffff]"] { background-color: #1b251d !important; }
+html.dark [class*="bg-[#f0f4ed]"] { background-color: #1a241c !important; }
+html.dark [class*="bg-[#ebf1e8]"],
+html.dark [class*="bg-[#e6ece2]"] { background-color: #223025 !important; }
+html.dark [class*="bg-[#d8e8d6]"],
+html.dark [class*="bg-[#e2eee1]"],
+html.dark [class*="bg-[#eaf0df]"],
+html.dark [class*="bg-[#dcedda]"] { background-color: #2a3a2c !important; }
+html.dark [class*="bg-[#2e5339]"] { background-color: #3f714a !important; }
+html.dark [class*="border-[#e1e8df]"],
+html.dark [class*="border-[#d2ddd0]"],
+html.dark [class*="border-[#d5dfd2]"] { border-color: #3d503f !important; }
+html.dark [class*="text-[#1b2e21]"],
+html.dark [class*="text-[#02210e]"],
+html.dark [class*="text-[#163c24]"] { color: #e7f0e7 !important; }
+html.dark [class*="text-[#3c4f41]"],
+html.dark [class*="text-[#54735c]"],
+html.dark [class*="text-[#708071]"],
+html.dark [class*="text-[#424842]"] { color: #b6c6b8 !important; }
+html.dark [class*="text-[#2e5339]"] { color: #bee1c3 !important; }
+html.dark input,
+html.dark textarea,
+html.dark select { border-color: #3d503f !important; color: #e7f0e7 !important; background-color: #162019 !important; }
+html.dark figure img { filter: brightness(.72) saturate(.8); }
+html.dark circle[stroke="#d8e8d6"] { stroke: #3d503f; }
+html.dark circle[stroke="#2e5339"] { stroke: #83b18b; }
+
 .focus-page { min-height: 100dvh; overflow: hidden; background: radial-gradient(circle at 77% 35%, rgba(22,115,106,.21), transparent 28rem), radial-gradient(circle at 9% 96%, rgba(48,215,160,.1), transparent 31rem), #06101d; }
 .focus-shell { width: min(1180px, calc(100% - 3rem)); margin: 0 auto; padding: 1.6rem 0 4rem; }
 .app-header { display: flex; align-items: center; justify-content: space-between; padding: .45rem 0; }
