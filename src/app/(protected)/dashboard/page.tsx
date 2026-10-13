@@ -34,11 +34,7 @@ export default async function DashboardPage() {
   } catch {
     databaseUnavailable = true;
   }
-  const developmentBypass = process.env.NODE_ENV !== "production" && process.env.DEV_AUTH_BYPASS !== "false";
-
   return <MatchaDashboardWorkspace
-    user={{ name: user.name, image: user.image }}
-    developmentBypass={developmentBypass}
     timezone={data.timezone}
     todayLabel={data.todayLabel}
     dailyGoalMinutes={data.dailyGoalMinutes}

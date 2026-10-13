@@ -16,16 +16,22 @@ import {
 const optionalId = z.string().min(1).nullable().optional();
 const sessionIdSchema = z.string().min(1);
 
-function refreshTimerViews() {
+function refreshTimer() {
   revalidatePath("/");
+}
+
+function refreshCompletedSessionViews() {
+  refreshTimer();
   revalidatePath("/dashboard");
+  revalidatePath("/categories");
+  revalidatePath("/history");
 }
 
 export async function startSession(categoryId?: string | null): Promise<ActionResult<{ id: string }>> {
   try {
     const user = await getCurrentUser();
     const session = await startLearningSession(user.id, optionalId.parse(categoryId));
-    refreshTimerViews();
+    refreshTimer();
     return { ok: true, data: { id: session.id } };
   } catch (error) {
     return toActionError(error);
@@ -36,7 +42,7 @@ export async function pauseSession(sessionId: string): Promise<ActionResult<{ id
   try {
     const user = await getCurrentUser();
     const session = await pauseLearningSession(user.id, sessionIdSchema.parse(sessionId));
-    refreshTimerViews();
+    refreshTimer();
     return { ok: true, data: { id: session.id } };
   } catch (error) {
     return toActionError(error);
@@ -47,7 +53,7 @@ export async function resumeSession(sessionId: string): Promise<ActionResult<{ i
   try {
     const user = await getCurrentUser();
     const session = await resumeLearningSession(user.id, sessionIdSchema.parse(sessionId));
-    refreshTimerViews();
+    refreshTimer();
     return { ok: true, data: { id: session.id } };
   } catch (error) {
     return toActionError(error);
@@ -58,7 +64,7 @@ export async function finishSession(sessionId: string): Promise<ActionResult<{ i
   try {
     const user = await getCurrentUser();
     const session = await finishLearningSession(user.id, sessionIdSchema.parse(sessionId));
-    refreshTimerViews();
+    refreshCompletedSessionViews();
     return { ok: true, data: { id: session.id } };
   } catch (error) {
     return toActionError(error);
@@ -69,7 +75,7 @@ export async function cancelSession(sessionId: string): Promise<ActionResult> {
   try {
     const user = await getCurrentUser();
     await cancelLearningSession(user.id, sessionIdSchema.parse(sessionId));
-    refreshTimerViews();
+    refreshTimer();
     return { ok: true, data: undefined };
   } catch (error) {
     return toActionError(error);
@@ -87,7 +93,7 @@ export async function changeSessionCategory(
       sessionIdSchema.parse(sessionId),
       optionalId.parse(categoryId),
     );
-    refreshTimerViews();
+    refreshTimer();
     return { ok: true, data: { id: session.id } };
   } catch (error) {
     return toActionError(error);

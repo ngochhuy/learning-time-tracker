@@ -1,11 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, useTransition, type ReactNode } from "react";
-import Link from "next/link";
-import { AudioLines, CheckCircle2, ChevronDown, CirclePause, Clock3, Coffee, Edit3, History, Leaf, PictureInPicture2, Play, Sparkles, TimerReset, Trash2, X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { MatchaAppSidebar } from "@/components/matcha-app-sidebar";
-import { MatchaAppHeader } from "@/components/matcha-app-header";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { CheckCircle2, ChevronDown, CirclePause, Coffee, Edit3, PictureInPicture2, Play, TimerReset, Trash2, X } from "lucide-react";
+import { useAppShell } from "@/components/matcha-app-shell";
 import { cancelSession, changeSessionCategory, finishSession, pauseSession, resumeSession, startSession } from "@/app/actions/timer";
 import { formatDuration } from "@/lib/utils";
 import type { LearningStatus } from "@/generated/prisma/client";
@@ -21,8 +18,6 @@ type Category = { id: string; name: string };
 type Props = {
   session: MatchaSession | null;
   categories: Category[];
-  user: { name: string; image?: string | null };
-  developmentBypass: boolean;
   timezone: string;
   dailyGoalMinutes: number;
   completedTodaySeconds: number;
@@ -55,14 +50,12 @@ function clock(seconds: number) {
   return [Math.floor(value / 3600), Math.floor((value % 3600) / 60), value % 60].map((part) => String(part).padStart(2, "0"));
 }
 
-export function MatchaTimerWorkspace({ session, categories, user, developmentBypass, timezone, dailyGoalMinutes, completedTodaySeconds, databaseUnavailable = false }: Props) {
-  const router = useRouter();
+export function MatchaTimerWorkspace({ session, categories, timezone, dailyGoalMinutes, completedTodaySeconds, databaseUnavailable = false }: Props) {
+  const { zen, setZen, setTimezone } = useAppShell();
   const [now, setNow] = useState(() => Date.now());
   const [selectedCategoryId, setSelectedCategoryId] = useState(session?.category?.id ?? "");
   const [categoryOpen, setCategoryOpen] = useState(false);
-  const [zen, setZen] = useState(false);
   const [showAlert, setShowAlert] = useState(true);
-  const [focusSound, setFocusSound] = useState(false);
   const [sessionGoal, setSessionGoal] = useState(MOCK_SESSION_GOAL);
   const [message, setMessage] = useState<string | null>(null);
   const pipSupported = useSyncExternalStore(
@@ -75,6 +68,9 @@ export function MatchaTimerWorkspace({ session, categories, user, developmentByp
   const pipWindowRef = useRef<Window | null>(null);
   const toggleRunRef = useRef<() => void>(() => undefined);
   const finishSessionRef = useRef<() => void>(() => undefined);
+
+  // The shell mirrors this server-provided setting when the Timer segment mounts or refreshes.
+  useEffect(() => setTimezone(timezone), [setTimezone, timezone]);
 
   useEffect(() => {
     if (session?.status !== "RUNNING") return;
@@ -127,7 +123,6 @@ export function MatchaTimerWorkspace({ session, categories, user, developmentByp
         setMessage(result.message ?? "Không thể thực hiện thao tác. Vui lòng thử lại.");
         return;
       }
-      router.refresh();
     });
   }
   function toggleRun() {
@@ -198,16 +193,8 @@ export function MatchaTimerWorkspace({ session, categories, user, developmentByp
     }
   }
 
-  return <main className={`min-h-dvh bg-[#f6f8f5] font-[family-name:var(--font-inter)] text-[#1b2e21] ${zen ? "lg:pl-0" : "lg:pl-72"}`}>
-    {!zen && <MatchaAppSidebar active="timer" user={user} developmentBypass={developmentBypass} />}
-
-    {!zen && <MatchaAppHeader
-      left={<div className="flex items-center gap-2 text-xs font-medium text-[#3c4f41]"><Leaf size={16} className="text-[#2e5339]" /><span>{timezone}</span><span className="text-[#a5b0a4]">•</span><span className="hidden sm:inline">Chế độ học sâu thảo mộc</span></div>}
-      right={<><button type="button" aria-pressed={focusSound} className="hidden items-center gap-2 rounded-lg border border-[#e1e8df] bg-[#f0f4ed] px-3 py-1.5 text-xs font-medium transition hover:bg-[#e6ece2] sm:inline-flex" onClick={() => setFocusSound((value) => !value)}><AudioLines size={15} className="text-[#2e5339]" />Âm thanh {focusSound ? "bật" : "tắt"}<span className="rounded bg-[#dcedda] px-1 text-[9px]">mock</span></button><button type="button" className="rounded-lg border border-[#e1e8df] bg-[#f0f4ed] px-3 py-1.5 text-xs font-medium transition hover:bg-[#e6ece2]" onClick={() => setZen(true)}>Chế độ Zen</button></>}
-    />}
-
+  return <main className="min-h-dvh bg-[#f6f8f5] font-[family-name:var(--font-inter)] text-[#1b2e21]">
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      <nav className="mb-5 flex gap-2 overflow-x-auto lg:hidden" aria-label="Điều hướng mobile"><NavLink active href="/" icon={<Clock3 size={16} />}>Timer</NavLink><NavLink href="/dashboard" icon={<Sparkles size={16} />}>Thống kê</NavLink><NavLink href="/history" icon={<History size={16} />}>Lịch sử</NavLink></nav>
       {zen && <button type="button" className="mb-5 inline-flex items-center gap-2 rounded-lg border border-[#e1e8df] bg-white px-3 py-2 text-xs font-semibold" onClick={() => setZen(false)}><X size={15} />Thoát Zen</button>}
 
       {longRunning && showAlert && <section className="relative mb-6 overflow-hidden rounded-xl border border-[#e1e8df] bg-[#f0f4ed] p-4 shadow-sm sm:flex sm:items-center sm:justify-between sm:p-5"><div className="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-[#d8e8d6]/70 blur-2xl" /><div className="relative flex items-start gap-3.5"><span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg bg-[#ebd9c8] text-[#704214]"><Coffee size={18} /></span><div><div className="flex flex-wrap items-center gap-2"><h2 className="font-[family-name:var(--font-geist)] text-lg font-semibold tracking-[-.01em]">Nhắc nhở hồi phục năng lượng</h2><span className="rounded-full bg-[#ebd9c8] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#704214]">{formatDuration(elapsed)} liên tục</span></div><p className="mt-1 max-w-3xl text-sm leading-6 text-[#3c4f41]">Bạn đã duy trì sự tập trung sâu qua 8 giờ liên tục. Hãy dành thời gian uống nước và thư giãn mắt để bảo toàn hiệu suất.</p></div></div><div className="relative mt-3 flex justify-end gap-2 sm:mt-0"><button className="rounded-lg border border-[#e1e8df] bg-white px-3.5 py-2 text-sm font-medium" onClick={() => setShowAlert(false)}>Đã hiểu</button>{isRunning && <button className="inline-flex items-center gap-1.5 rounded-lg bg-[#2e5339] px-4 py-2 text-sm font-medium text-white" disabled={disabled} onClick={() => run(() => pauseSession(session!.id))}><Coffee size={15} />Nghỉ giải lao</button>}</div></section>}
@@ -233,10 +220,6 @@ export function MatchaTimerWorkspace({ session, categories, user, developmentByp
       </div>
     </div>
   </main>;
-}
-
-function NavLink({ href, icon, active = false, children }: { href: string; icon: ReactNode; active?: boolean; children: ReactNode }) {
-  return <Link className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition ${active ? "bg-[#2e5339] font-medium text-white shadow-sm" : "font-medium text-[#3c4f41] hover:bg-[#e6ece2] hover:text-[#1b2e21]"}`} href={href}>{icon}{children}</Link>;
 }
 
 function CategoryOption({ name, active, onClick }: { name: string; active: boolean; onClick: () => void }) {

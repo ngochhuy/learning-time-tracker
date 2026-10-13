@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { headers } from "next/headers";
 import { auth, isGoogleAuthConfigured } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
@@ -9,7 +10,7 @@ export type CurrentUser = {
   image?: string | null;
 };
 
-export async function getCurrentUser(): Promise<CurrentUser> {
+export const getCurrentUser = cache(async function getCurrentUser(): Promise<CurrentUser> {
   const developmentBypass =
     process.env.NODE_ENV !== "production" &&
     process.env.DEV_AUTH_BYPASS !== "false";
@@ -33,4 +34,4 @@ export async function getCurrentUser(): Promise<CurrentUser> {
     email: session.user.email,
     image: session.user.image,
   };
-}
+});

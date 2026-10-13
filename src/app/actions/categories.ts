@@ -9,18 +9,22 @@ import { toActionError, type ActionResult } from "@/lib/errors";
 const idSchema = z.string().min(1);
 const nameSchema = z.string().min(1).max(200);
 
-function refreshCategoryViews() {
+function refreshCategoryPickerViews() {
   revalidatePath("/");
-  revalidatePath("/dashboard");
   revalidatePath("/categories");
   revalidatePath("/history");
+}
+
+function refreshCategoryDetailsViews() {
+  refreshCategoryPickerViews();
+  revalidatePath("/dashboard");
 }
 
 export async function addCategory(name: string, colorKey?: CategoryColorKey): Promise<ActionResult<{ id: string; colorKey: CategoryColorKey }>> {
   try {
     const user = await getCurrentUser();
     const category = await createCategory(user.id, nameSchema.parse(name), colorKey);
-    refreshCategoryViews();
+    refreshCategoryPickerViews();
     return { ok: true, data: { id: category.id, colorKey: category.colorKey as CategoryColorKey } };
   } catch (error) {
     return toActionError(error);
@@ -31,7 +35,7 @@ export async function updateCategory(categoryId: string, name: string): Promise<
   try {
     const user = await getCurrentUser();
     const category = await renameCategory(user.id, idSchema.parse(categoryId), nameSchema.parse(name));
-    refreshCategoryViews();
+    refreshCategoryDetailsViews();
     return { ok: true, data: { id: category.id } };
   } catch (error) {
     return toActionError(error);
@@ -42,7 +46,7 @@ export async function removeCategory(categoryId: string): Promise<ActionResult<{
   try {
     const user = await getCurrentUser();
     const summary = await deleteCategory(user.id, idSchema.parse(categoryId));
-    refreshCategoryViews();
+    refreshCategoryDetailsViews();
     return { ok: true, data: summary };
   } catch (error) {
     return toActionError(error);

@@ -37,7 +37,7 @@ export function ThemeToggle() {
 
   const label = isDark ? "Chuyển sang nền sáng" : "Chuyển sang nền tối";
 
-  return <button type="button" aria-label={label} title={label} aria-pressed={isDark} onClick={toggleTheme} className="fixed bottom-5 right-5 z-40 grid size-11 place-items-center rounded-full border border-[#d2ddd0] bg-[#f0f4ed] text-[#2e5339] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#e6ece2] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2e5339] focus-visible:ring-offset-2" suppressHydrationWarning>
+  return <button type="button" aria-label={label} title={label} aria-pressed={isDark} onClick={toggleTheme} className="app-theme-toggle fixed bottom-5 right-5 z-40 grid size-11 place-items-center rounded-full border border-[#d2ddd0] bg-[#f0f4ed] text-[#2e5339] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#e6ece2] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2e5339] focus-visible:ring-offset-2" suppressHydrationWarning>
     {isDark ? <Sun size={19} /> : <Moon size={19} />}
   </button>;
 }

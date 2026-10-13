@@ -18,7 +18,7 @@ function validateColorKey(value?: string): CategoryColorKey {
 }
 
 export async function getCategories(userId: string) {
-  return db.category.findMany({ where: { userId }, orderBy: { name: "asc" } });
+  return db.category.findMany({ where: { userId }, orderBy: { name: "asc" }, select: { id: true, name: true } });
 }
 
 export async function createCategory(userId: string, rawName: string, colorKey?: string) {
@@ -60,7 +60,7 @@ export async function deleteCategory(userId: string, categoryId: string) {
 
 export async function getCategoryOverview(userId: string) {
   const [categories, grouped] = await Promise.all([
-    db.category.findMany({ where: { userId }, orderBy: { name: "asc" } }),
+    db.category.findMany({ where: { userId }, orderBy: { name: "asc" }, select: { id: true, name: true, colorKey: true } }),
     db.learningSession.groupBy({
       by: ["categoryId"],
       where: { userId, status: "COMPLETED" },

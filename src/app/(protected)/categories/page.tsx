@@ -16,10 +16,7 @@ export default async function CategoriesPage() {
   }
 
   const overview = await getCategoryOverview(user.id);
-  const developmentBypass = process.env.NODE_ENV !== "production" && process.env.DEV_AUTH_BYPASS !== "false";
   return <MatchaCategoryWorkspace
-    user={{ name: user.name, image: user.image }}
-    developmentBypass={developmentBypass}
     initialCategories={overview.categories.map((category) => ({ ...category, lastCompletedAt: category.lastCompletedAt?.toISOString() ?? null }))}
     initialUncategorized={overview.uncategorized}
     initialTotalSeconds={overview.totalSeconds}

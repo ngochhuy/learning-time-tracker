@@ -11,6 +11,14 @@ export const isGoogleAuthConfigured = Boolean(
 export const auth = betterAuth({
   appName: "ForcusLearn",
   database: prismaAdapter(db, { provider: "postgresql" }),
+  // Keep a short-lived, signed copy of the session in the cookie. Most page
+  // navigations can then authenticate without an extra round trip to Neon.
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60,
+    },
+  },
   secret:
     process.env.BETTER_AUTH_SECRET ??
     "build-only-secret-that-must-not-be-used-in-production",

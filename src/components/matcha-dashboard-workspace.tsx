@@ -17,16 +17,12 @@ import {
   TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { updateSettings } from "@/app/actions/settings";
-import { MatchaAppSidebar } from "@/components/matcha-app-sidebar";
-import { MatchaAppHeader } from "@/components/matcha-app-header";
+import { useAppShell } from "@/components/matcha-app-shell";
 import { formatDuration } from "@/lib/utils";
 
 type DashboardWorkspaceProps = {
-  user: { name: string; image?: string | null };
-  developmentBypass: boolean;
   timezone: string;
   todayLabel: string;
   dailyGoalMinutes: number;
@@ -57,8 +53,6 @@ function formatSessionDate(value: string, timezone: string) {
 }
 
 export function MatchaDashboardWorkspace({
-  user,
-  developmentBypass,
   timezone,
   todayLabel,
   dailyGoalMinutes,
@@ -72,9 +66,8 @@ export function MatchaDashboardWorkspace({
   averageSessionSeconds,
   databaseUnavailable = false,
 }: DashboardWorkspaceProps) {
-  const router = useRouter();
+  const { settingsOpen: goalOpen, setSettingsOpen: setGoalOpen, setTimezone: setShellTimezone } = useAppShell();
   const [timezoneOpen, setTimezoneOpen] = useState(false);
-  const [goalOpen, setGoalOpen] = useState(false);
   const [range, setRange] = useState<"week" | "month">("week");
   const [categoryRange, setCategoryRange] = useState<"day" | "week">("week");
   const [isPending, startTransition] = useTransition();
@@ -100,23 +93,16 @@ export function MatchaDashboardWorkspace({
     startTransition(async () => {
       const result = await updateSettings(nextTimezone, nextGoal);
       if (result.ok) {
+        setShellTimezone(nextTimezone);
         setTimezoneOpen(false);
         setGoalOpen(false);
-        router.refresh();
       }
     });
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f8f5] font-[family-name:var(--font-inter)] text-[#1b2e21] lg:pl-72">
-      <MatchaAppSidebar active="dashboard" user={user} developmentBypass={developmentBypass} />
-      <div>
-        <MatchaAppHeader
-          left={<><Link href="/" className="flex items-center gap-2 font-[family-name:var(--font-geist)] font-bold text-[#2e5339] lg:hidden"><Leaf size={20} /> ForcusLearn</Link><span className="hidden text-sm font-medium text-[#3c4f41] lg:block">Thống kê tiến độ học tập</span></>}
-          right={<span className="rounded-full bg-[#e2eee1] px-3 py-1 text-xs font-semibold text-[#2e5339]">Nhịp học của bạn</span>}
-        />
-
-        <div className="mx-auto max-w-[1400px] px-5 py-8 lg:px-10">
+    <main className="min-h-screen bg-[#f6f8f5] font-[family-name:var(--font-inter)] text-[#1b2e21]">
+      <div className="mx-auto max-w-[1400px] px-5 py-8 lg:px-10">
           {databaseUnavailable && <div role="alert" className="mb-5 flex items-center gap-2 rounded-xl border border-[#ead5a6] bg-[#fff9e8] px-4 py-3 text-sm text-[#7b5d19]"><Clock3 size={16} /> Chưa thể tải dữ liệu học từ database. Bạn vẫn có thể dùng điều hướng; hãy kiểm tra lại cấu hình database rồi tải lại trang.</div>}
           <section className="mb-8 flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
             <div>
@@ -140,7 +126,7 @@ export function MatchaDashboardWorkspace({
             <MetricCard icon={<Sparkles size={18} />} label="Phiên học trung bình" value={formatDuration(averageSessionSeconds)} suffix="/ phiên" footer={<><span className="inline-flex items-center gap-1 text-[#2e5339]"><Sparkles size={14} />94% Focus score</span><span className="rounded bg-[#ebd9c8] px-1.5 py-0.5 text-[10px] font-bold text-[#73563d]">MINH HOẠ</span></>} bottom={`Tổng cộng ${completedSessionCount} phiên hoàn tất`} />
           </section>
 
-          <section className="relative mt-5 overflow-visible rounded-2xl border border-[#d2ddd0] bg-white p-5 shadow-sm lg:p-6">
+          <section id="dashboard-goal-settings" className="relative mt-5 overflow-visible rounded-2xl border border-[#d2ddd0] bg-white p-5 shadow-sm lg:p-6">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -177,9 +163,8 @@ export function MatchaDashboardWorkspace({
             </article>
             <aside className="flex flex-col justify-between rounded-2xl border border-[#d2ddd0] bg-[#f0f4ed] p-5 shadow-sm lg:col-span-4"><div><div className="grid size-12 place-items-center rounded-xl bg-[#d8e8d6] text-[#2e5339]"><Leaf size={24} /></div><p className="mt-5 font-[family-name:var(--font-geist)] text-xl font-bold leading-tight tracking-[-0.04em]">Kỷ luật là cầu nối giữa mục tiêu và thành tựu.</p><p className="mt-3 text-sm leading-6 text-[#54735c]">Dành một khoảng tập trung cho điều quan trọng nhất của bạn hôm nay.</p></div><div className="mt-8 flex items-center justify-between"><span className="rounded bg-[#ebd9c8] px-2 py-1 text-[10px] font-bold text-[#73563d]">MINH HOẠ</span><Link href="/categories" className="text-sm font-bold text-[#2e5339] hover:underline">Quản lý danh mục <ArrowRight size={14} className="inline" /></Link></div></aside>
           </section>
-        </div>
       </div>
-      {isPending && <div className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-xl bg-[#1b2e21] px-4 py-3 text-sm font-bold text-white shadow-xl"><LoaderCircle size={16} className="animate-spin" /> Đang lưu cài đặt...</div>}
+      {isPending && <div className="fixed bottom-24 right-4 z-50 inline-flex items-center gap-2 rounded-xl bg-[#1b2e21] px-4 py-3 text-sm font-bold text-white shadow-xl lg:bottom-5 lg:right-5"><LoaderCircle size={16} className="animate-spin" /> Đang lưu cài đặt...</div>}
     </main>
   );
 }

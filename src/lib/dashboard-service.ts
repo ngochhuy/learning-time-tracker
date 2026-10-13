@@ -31,6 +31,39 @@ export function allocateIntervalsByDay(intervals: IntervalInput[], timezone: str
   return { dayTotals: totals, categories: [...categories.values()].sort((a, b) => b.seconds - a.seconds) };
 }
 
+/** Only fetch the small summary required by the Timer page. */
+export async function getTimerSummary(userId: string) {
+  const settings = await db.userSettings.upsert({
+    where: { userId },
+    create: { userId },
+    update: {},
+    select: { timezone: true, dailyGoalMinutes: true },
+  });
+  const now = DateTime.now().setZone(settings.timezone);
+  const rangeStart = now.startOf("day").toUTC().toJSDate();
+  const rangeEnd = now.toUTC().toJSDate();
+  const intervals = await db.sessionInterval.findMany({
+    where: {
+      endedAt: { gt: rangeStart, lte: rangeEnd },
+      startedAt: { lt: rangeEnd },
+      session: { userId, status: "COMPLETED" },
+    },
+    select: { startedAt: true, endedAt: true },
+  });
+  const todaySeconds = intervals.reduce((total, interval) => {
+    if (!interval.endedAt) return total;
+    const startedAt = interval.startedAt < rangeStart ? rangeStart : interval.startedAt;
+    const endedAt = interval.endedAt > rangeEnd ? rangeEnd : interval.endedAt;
+    return total + Math.max(0, Math.floor((endedAt.getTime() - startedAt.getTime()) / 1_000));
+  }, 0);
+
+  return {
+    timezone: settings.timezone,
+    dailyGoalMinutes: settings.dailyGoalMinutes,
+    todaySeconds,
+  };
+}
+
 export async function getDashboardData(userId: string) {
   const settings = await db.userSettings.upsert({
     where: { userId },
@@ -45,11 +78,28 @@ export async function getDashboardData(userId: string) {
   // A completed session can begin before this week, hence fetch the small
   // boundary cushion and let allocation decide its local day contributions.
   const from = now.startOf("week").toUTC().toJSDate();
-  const intervals = await db.sessionInterval.findMany({
-    where: { endedAt: { not: null }, session: { userId, status: "COMPLETED", endedAt: { gte: from } } },
-    include: { session: { select: { category: { select: { id: true, name: true } } } } },
-    orderBy: { startedAt: "desc" },
-  });
+  const [intervals, recent, sessionAggregate] = await Promise.all([
+    db.sessionInterval.findMany({
+      where: { endedAt: { not: null }, session: { userId, status: "COMPLETED", endedAt: { gte: from } } },
+      select: {
+        startedAt: true,
+        endedAt: true,
+        session: { select: { category: { select: { id: true, name: true } } } },
+      },
+      orderBy: { startedAt: "desc" },
+    }),
+    db.learningSession.findMany({
+      where: { userId, status: "COMPLETED" },
+      select: { id: true, startedAt: true, endedAt: true, durationSeconds: true, category: { select: { name: true } } },
+      orderBy: { endedAt: "desc" },
+      take: 5,
+    }),
+    db.learningSession.aggregate({
+      where: { userId, status: "COMPLETED" },
+      _avg: { durationSeconds: true },
+      _count: { id: true },
+    }),
+  ]);
   const rangeStart = now.startOf("week").toUTC().toJSDate();
   const rangeEnd = now.toUTC().toJSDate();
   const weeklyIntervals = intervals.map((interval) => ({
@@ -78,19 +128,6 @@ export async function getDashboardData(userId: string) {
       isToday: isoDate === today,
     };
   });
-  const [recent, sessionAggregate] = await Promise.all([
-    db.learningSession.findMany({
-    where: { userId, status: "COMPLETED" },
-    include: { category: { select: { name: true } } },
-    orderBy: { endedAt: "desc" },
-    take: 5,
-    }),
-    db.learningSession.aggregate({
-      where: { userId, status: "COMPLETED" },
-      _avg: { durationSeconds: true },
-      _count: { id: true },
-    }),
-  ]);
   return {
     timezone: zone,
     todayLabel: now.setLocale("vi").toFormat("d/M/yyyy"),

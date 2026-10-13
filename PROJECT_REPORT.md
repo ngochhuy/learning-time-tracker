@@ -1,6 +1,6 @@
 # Báo cáo triển khai — ForcusLearn
 
-Ngày cập nhật: 07/10/2026
+Ngày cập nhật: 13/10/2026
 
 ## 1. Mục tiêu đã thực hiện
 
@@ -105,12 +105,19 @@ Các ràng buộc quan trọng đã có trong migration:
 
 ```text
 src/app/
+  (protected)/          Shared shell và các route cần đăng nhập
+    page.tsx            Trang timer chính
+    categories/          Trang quản lý danh mục
+    dashboard/           Trang dashboard
+    history/             Trang lịch sử học
   actions/              Server Actions: timer, category, history, settings
   api/auth/[...all]/    Route Handler của Better Auth
-  categories/           Trang quản lý danh mục
-  dashboard/            Trang dashboard
-  history/              Trang lịch sử học
-  page.tsx              Trang timer chính
+  login/                 Trang đăng nhập
+  global-error.tsx       Fallback lỗi toàn ứng dụng
+  not-found.tsx          Trang 404
+src/components/
+  matcha-app-shell.tsx   Sidebar/topbar dùng chung
+  matcha-app-loading.tsx Skeleton loading theo route
 src/lib/
   timer-service.ts      Nghiệp vụ timer và transaction
   history-service.ts    Nghiệp vụ History/edit/delete
@@ -153,7 +160,7 @@ prisma/
 | Prisma schema validation | Đạt |
 | TypeScript | Đạt |
 | ESLint | Đạt |
-| Unit tests | 8/8 đạt |
+| Unit/component tests | 12/12 đạt |
 | Next.js production build | Đạt |
 
 Vitest hiện chỉ phát cảnh báo cấu hình ESM/CommonJS trong `vitest.config.ts`; không có test nào thất bại.
@@ -179,3 +186,56 @@ Các tính năng sau chưa được triển khai theo đúng phạm vi đã ch�
 - Biểu đồ/analytics nâng cao.
 - Email/password login.
 - Notifications, đa ngôn ngữ và lịch sử thay đổi Daily Goal.
+
+## 11. Báo cáo refactor Frontend dùng layout chung
+
+### Mục tiêu
+
+Tổ chức lại các trang chính dùng chung một application shell (sidebar, topbar và trạng thái giao diện), giữ trải nghiệm Matcha & Sage hiện tại, đồng thời làm chuyển trang nhanh và nhất quán hơn. Refactor không thay đổi schema database hay luồng nghiệp vụ học.
+
+### Các phase đã hoàn thành
+
+| Phase | Nội dung |
+| --- | --- |
+| 1 — Shared layout | Gom các route được bảo vệ vào route group `src/app/(protected)/`; dùng chung sidebar/app shell và giữ URL `/`, `/dashboard`, `/history`, `/categories` không đổi. |
+| 2 — Topbar và trạng thái shell | Dùng chung topbar theo route; quản lý các trạng thái giao diện cấp shell như Zen mode, timezone hiển thị và khu vực mục tiêu Dashboard. |
+| 3 — Loading, lỗi và trang History | Tạo loading skeleton theo từng route để nội dung chờ phản ánh đúng trang sắp mở; bổ sung error boundary cho nhóm trang được bảo vệ; cập nhật History để khớp bố cục shell chung. |
+| 4 — Tối ưu dữ liệu khi điều hướng | Rà soát revalidation sau Server Actions và giảm dữ liệu chuyển từ server xuống client ở Dashboard, tránh refresh không cần thiết các trang liên quan. |
+| 5 — Kiểm thử và hoàn thiện | Tạo lại route types bằng `next typegen` trước TypeScript; loại route types cũ trong `.next/dev` khỏi typecheck; thêm test component cho nhãn/loading state của cả bốn route. |
+
+### Thay đổi cấu trúc đáng chú ý
+
+```text
+src/app/
+  (protected)/
+    layout.tsx          Protected shell dùng chung
+    page.tsx            Timer (/)
+    dashboard/page.tsx  Thống kê (/dashboard)
+    history/page.tsx    Lịch sử (/history)
+    categories/page.tsx Danh mục (/categories)
+  login/page.tsx        Đăng nhập (ngoài protected shell)
+  actions/              Server Actions
+src/components/
+  matcha-app-shell.tsx      Shared sidebar/topbar và shell state
+  matcha-app-sidebar.tsx    Điều hướng chung
+  matcha-app-header.tsx     Topbar chung
+  matcha-app-loading.tsx    Loading skeleton theo route
+```
+
+### Kết quả kiểm tra sau refactor
+
+| Kiểm tra | Kết quả |
+| --- | --- |
+| Vitest unit/component | 12/12 đạt trên 5 test files |
+| ESLint | Đạt |
+| `next typegen` + TypeScript | Đạt |
+| Next.js production build | Đạt; các route chính được nhận diện đúng |
+| `git diff --check` | Đạt; chỉ có cảnh báo chuẩn hóa LF/CRLF của Git trên Windows |
+
+Test mới xác nhận thông báo trợ năng của loading state gọi đúng tên Timer, Thống kê, Lịch sử hoặc Danh mục và container đang tải có `aria-busy="true"`. Việc sinh route types trước typecheck cũng tránh lỗi TypeScript do `.next/dev/types` còn tham chiếu các route trước khi chuyển vào route group; không cần xóa cache `.next`.
+
+### Lưu ý và phần chưa kiểm thử trong lượt refactor
+
+- Môi trường chạy kiểm tra hiện tại là Node.js `22.18.0`; dự án pin Node.js 24 qua `.nvmrc` và `engines`. Test, typecheck và build đều qua trên môi trường này, nhưng nên chạy lại bằng Node.js 24 trước khi phát hành.
+- Chưa chạy E2E trên trình duyệt cho Google OAuth hoặc thao tác production. Cần tiếp tục smoke test bằng tài khoản và cấu hình của chủ dự án sau khi deploy.
+- `vitest.config.ts` còn một cảnh báo tương thích config loader của Vite cho major version tương lai; cảnh báo không làm test thất bại.

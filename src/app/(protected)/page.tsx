@@ -3,7 +3,7 @@ import { MatchaTimerWorkspace, type MatchaSession } from "@/components/matcha-ti
 import { getCurrentUser } from "@/lib/current-user";
 import { getActiveSession } from "@/lib/timer-service";
 import { getCategories } from "@/lib/category-service";
-import { getDashboardData } from "@/lib/dashboard-service";
+import { getTimerSummary } from "@/lib/dashboard-service";
 import { AppError } from "@/lib/errors";
 
 export const dynamic = "force-dynamic";
@@ -38,20 +38,19 @@ export default async function Home() {
   let databaseUnavailable = false;
 
   try {
-    const [active, userCategories, dashboard] = await Promise.all([
+    const [active, userCategories, timerSummary] = await Promise.all([
       getActiveSession(user.id),
       getCategories(user.id),
-      getDashboardData(user.id),
+      getTimerSummary(user.id),
     ]);
     session = serializeSession(active);
     categories = userCategories.map(({ id, name }) => ({ id, name }));
-    timezone = dashboard.timezone;
-    dailyGoalMinutes = dashboard.dailyGoalMinutes;
-    completedTodaySeconds = dashboard.todaySeconds;
+    timezone = timerSummary.timezone;
+    dailyGoalMinutes = timerSummary.dailyGoalMinutes;
+    completedTodaySeconds = timerSummary.todaySeconds;
   } catch {
     databaseUnavailable = true;
   }
 
-  const developmentBypass = process.env.NODE_ENV !== "production" && process.env.DEV_AUTH_BYPASS !== "false";
-  return <MatchaTimerWorkspace session={session} categories={categories} user={user} developmentBypass={developmentBypass} timezone={timezone} dailyGoalMinutes={dailyGoalMinutes} completedTodaySeconds={completedTodaySeconds} databaseUnavailable={databaseUnavailable} />;
+  return <MatchaTimerWorkspace session={session} categories={categories} timezone={timezone} dailyGoalMinutes={dailyGoalMinutes} completedTodaySeconds={completedTodaySeconds} databaseUnavailable={databaseUnavailable} />;
 }

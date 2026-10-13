@@ -1,11 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState, useTransition } from "react";
-import { AlertTriangle, Check, ChevronRight, CirclePlus, Clock3, FolderCog, Leaf, LockKeyhole, Palette, Pencil, Plus, ShieldCheck, Tag, TimerReset, Trash2 } from "lucide-react";
-import Link from "next/link";
+import { AlertTriangle, Check, ChevronRight, CirclePlus, Clock3, FolderCog, LockKeyhole, Palette, Pencil, Plus, ShieldCheck, Tag, TimerReset, Trash2 } from "lucide-react";
 import { addCategory, removeCategory, updateCategory } from "@/app/actions/categories";
-import { MatchaAppHeader } from "@/components/matcha-app-header";
-import { MatchaAppSidebar } from "@/components/matcha-app-sidebar";
 import type { CategoryColorKey } from "@/lib/category-service";
 import { formatDuration } from "@/lib/utils";
 
@@ -19,8 +16,6 @@ export type CategoryOverviewItem = {
 };
 
 type CategoryWorkspaceProps = {
-  user: { name: string; image?: string | null };
-  developmentBypass: boolean;
   initialCategories: CategoryOverviewItem[];
   initialUncategorized: { durationSeconds: number; sessionCount: number };
   initialTotalSeconds: number;
@@ -56,7 +51,7 @@ function hoursAndMinutes(seconds: number) {
   return { hours: Math.floor(safe / 3600), minutes: Math.floor((safe % 3600) / 60) };
 }
 
-export function MatchaCategoryWorkspace({ user, developmentBypass, initialCategories, initialUncategorized, initialTotalSeconds }: CategoryWorkspaceProps) {
+export function MatchaCategoryWorkspace({ initialCategories, initialUncategorized, initialTotalSeconds }: CategoryWorkspaceProps) {
   const [categories, setCategories] = useState(initialCategories);
   const [uncategorized, setUncategorized] = useState(initialUncategorized);
   const totalSeconds = initialTotalSeconds;
@@ -129,12 +124,10 @@ export function MatchaCategoryWorkspace({ user, developmentBypass, initialCatego
     setColorKey(`custom:${value}` as CategoryColorKey);
   }
 
-  return <main className="min-h-screen bg-[#f6f8f5] font-[family-name:var(--font-inter)] text-[#1b2e21] lg:pl-72">
-    <MatchaAppSidebar active="categories" user={user} developmentBypass={developmentBypass} />
+  return <main className="min-h-screen bg-[#f6f8f5] font-[family-name:var(--font-inter)] text-[#1b2e21]">
     <div>
-      <MatchaAppHeader left={<><Link href="/" className="flex items-center gap-2 font-[family-name:var(--font-geist)] font-bold text-[#2e5339] lg:hidden"><Leaf size={20} /> ForcusLearn</Link><div className="hidden items-center gap-2 text-xs font-medium text-[#3c4f41] lg:flex"><Leaf size={16} className="text-[#2e5339]" /><span>Không gian học tập cá nhân</span><span className="text-[#a5b0a4]">•</span><span className="font-semibold text-[#1b2e21]">Chế độ học sâu thảo mộc</span></div></>} right={<span className="rounded-full bg-[#e2eee1] px-3 py-1 text-xs font-semibold text-[#2e5339]">Danh mục học tập</span>} />
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-10">
-        {message && <div role="status" className="fixed bottom-8 right-6 z-50 flex max-w-md items-center gap-2 rounded-lg border border-[#d2ddd0] bg-[#2e5339] px-4 py-3 text-sm font-semibold text-white shadow-xl"><Check size={18} className="text-[#d8e8d6]" />{message}</div>}
+        {message && <div role="status" className="fixed bottom-24 right-4 z-50 flex max-w-md items-center gap-2 rounded-lg border border-[#d2ddd0] bg-[#2e5339] px-4 py-3 text-sm font-semibold text-white shadow-xl lg:bottom-8 lg:right-6"><Check size={18} className="text-[#d8e8d6]" />{message}</div>}
 
         <section className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-2xl"><div className="mb-2 flex items-center gap-2"><span className="rounded-full bg-[#d8e8d6] px-2.5 py-0.5 text-[11px] font-bold text-[#2e5339]">CẤU HÌNH HỆ THỐNG</span><span className="text-[#d2ddd0]">•</span><span className="text-[11px] font-semibold text-[#54735c]">Phiên bản MVP</span></div><h1 className="font-[family-name:var(--font-geist)] text-3xl font-bold tracking-[-0.04em] sm:text-4xl">Quản lý danh mục học tập</h1><p className="mt-2 text-sm leading-6 text-[#3c4f41]">Tổ chức và phân loại thời gian để tối ưu hiệu suất học tập cá nhân, duy trì trạng thái tập trung sâu và cân bằng các môn học.</p></div>

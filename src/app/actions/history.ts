@@ -11,12 +11,12 @@ const timestamp = z.string().datetime({ offset: true }).transform((value) => new
 
 function revalidateLearningViews() { revalidatePath("/history"); revalidatePath("/dashboard"); revalidatePath("/"); }
 
-export async function updateSession(sessionId: string, startedAt: string, endedAt: string, categoryId?: string | null): Promise<ActionResult> {
+export async function updateSession(sessionId: string, startedAt: string, endedAt: string, categoryId?: string | null): Promise<ActionResult<{ startedAt: string; endedAt: string; durationSeconds: number }>> {
   try {
     const user = await getCurrentUser();
-    await updateCompletedSession(user.id, id.parse(sessionId), timestamp.parse(startedAt), timestamp.parse(endedAt), categoryId ? id.parse(categoryId) : null);
+    const session = await updateCompletedSession(user.id, id.parse(sessionId), timestamp.parse(startedAt), timestamp.parse(endedAt), categoryId ? id.parse(categoryId) : null);
     revalidateLearningViews();
-    return { ok: true, data: undefined };
+    return { ok: true, data: { startedAt: session.startedAt.toISOString(), endedAt: session.endedAt!.toISOString(), durationSeconds: session.durationSeconds! } };
   } catch (error) { return toActionError(error); }
 }
 
