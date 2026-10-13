@@ -5,18 +5,13 @@ import { CheckCircle2, ChevronDown, CirclePause, Coffee, Edit3, PictureInPicture
 import { useAppShell } from "@/components/matcha-app-shell";
 import { cancelSession, changeSessionCategory, finishSession, pauseSession, resumeSession, startSession } from "@/app/actions/timer";
 import { formatDuration } from "@/lib/utils";
-import type { LearningStatus } from "@/generated/prisma/client";
-
-export type MatchaSession = {
-  id: string;
-  status: LearningStatus;
-  intervals: Array<{ startedAt: string; endedAt: string | null }>;
-  category: { id: string; name: string } | null;
-};
+import type { ActionResult } from "@/lib/errors";
+import { previewPauseSession, previewResumeSession, previewStartSession, type TimerSession } from "@/lib/timer-payload";
 
 type Category = { id: string; name: string };
+type TimerActionKind = "start" | "pause" | "resume" | "finish" | "cancel" | "category";
 type Props = {
-  session: MatchaSession | null;
+  session: TimerSession | null;
   categories: Category[];
   timezone: string;
   dailyGoalMinutes: number;
@@ -37,7 +32,7 @@ declare global {
 const MOCK_SESSION_GOAL = "Hoàn thành bài tập Thuật toán và đọc tài liệu về giao dịch phân tán.";
 const subscribeToPictureInPictureAvailability = () => () => undefined;
 
-function getElapsedSeconds(session: MatchaSession, now: number) {
+function getElapsedSeconds(session: TimerSession, now: number) {
   return session.intervals.reduce((total, interval) => {
     const started = new Date(interval.startedAt).getTime();
     const end = interval.endedAt ? new Date(interval.endedAt).getTime() : session.status === "RUNNING" ? now : started;
@@ -50,14 +45,23 @@ function clock(seconds: number) {
   return [Math.floor(value / 3600), Math.floor((value % 3600) / 60), value % 60].map((part) => String(part).padStart(2, "0"));
 }
 
-export function MatchaTimerWorkspace({ session, categories, timezone, dailyGoalMinutes, completedTodaySeconds, databaseUnavailable = false }: Props) {
+export function MatchaTimerWorkspace({ session: serverSession, categories, timezone, dailyGoalMinutes, completedTodaySeconds, databaseUnavailable = false }: Props) {
   const { zen, setZen, setTimezone } = useAppShell();
+  const [session, setSession] = useState(serverSession);
+  const [frozenPauseSeconds, setFrozenPauseSeconds] = useState<number | null>(null);
+  const [previousServerSession, setPreviousServerSession] = useState(serverSession);
   const [now, setNow] = useState(() => Date.now());
-  const [selectedCategoryId, setSelectedCategoryId] = useState(session?.category?.id ?? "");
+  const [selectedCategoryId, setSelectedCategoryId] = useState(serverSession?.category?.id ?? "");
+  if (serverSession !== previousServerSession) {
+    setPreviousServerSession(serverSession);
+    setSession(serverSession);
+    if (serverSession) setSelectedCategoryId(serverSession.category?.id ?? "");
+  }
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [showAlert, setShowAlert] = useState(true);
   const [sessionGoal, setSessionGoal] = useState(MOCK_SESSION_GOAL);
   const [message, setMessage] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<TimerActionKind | null>(null);
   const pipSupported = useSyncExternalStore(
     subscribeToPictureInPictureAvailability,
     () => Boolean(window.documentPictureInPicture),
@@ -65,6 +69,8 @@ export function MatchaTimerWorkspace({ session, categories, timezone, dailyGoalM
   );
   const [pipOpen, setPipOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const mutationInFlightRef = useRef(false);
+  const queuedPauseRef = useRef<{ clickedAt: string; displayedSeconds: number } | null>(null);
   const pipWindowRef = useRef<Window | null>(null);
   const toggleRunRef = useRef<() => void>(() => undefined);
   const finishSessionRef = useRef<() => void>(() => undefined);
@@ -93,15 +99,15 @@ export function MatchaTimerWorkspace({ session, categories, timezone, dailyGoalM
       const target = event.target as HTMLElement | null;
       if (target?.closest("input, textarea, select, button")) return;
       if (event.code === "Space") { event.preventDefault(); toggleRun(); }
-      if (event.ctrlKey && event.key === "Enter" && session) { event.preventDefault(); run(() => finishSession(session.id)); }
-      if (event.key === "Escape" && session && window.confirm("Hủy phiên học hiện tại? Thời gian chưa hoàn thành sẽ không được lưu.")) run(() => cancelSession(session.id));
+      if (event.ctrlKey && event.key === "Enter" && session) { event.preventDefault(); finishCurrentSession(); }
+      if (event.key === "Escape" && session) { event.preventDefault(); cancelCurrentSession(); }
       if (event.key.toLowerCase() === "z") setZen((value) => !value);
     }
     window.addEventListener("keydown", handleShortcut);
     return () => window.removeEventListener("keydown", handleShortcut);
   });
 
-  const elapsed = session ? getElapsedSeconds(session, now) : 0;
+  const elapsed = frozenPauseSeconds ?? (session ? getElapsedSeconds(session, now) : 0);
   const [hours, minutes, seconds] = clock(elapsed);
   const isRunning = session?.status === "RUNNING";
   const isPaused = session?.status === "PAUSED";
@@ -111,40 +117,126 @@ export function MatchaTimerWorkspace({ session, categories, timezone, dailyGoalM
   const goalPercent = Math.round(goalProgress * 100);
   const circumference = 791.68;
   const strokeOffset = circumference * (1 - goalProgress);
-  const disabled = pending || databaseUnavailable;
+  const disabled = pending || mutationInFlightRef.current || databaseUnavailable;
+  const canQueuePause = pendingAction === "start" && session?.id === "pending-start" && session.status === "RUNNING" && !queuedPauseRef.current;
   const categoryName = categories.find((category) => category.id === selectedCategoryId)?.name ?? "Chưa phân loại";
-  const statusText = isRunning ? "Đang trong phiên học sâu" : isPaused ? "Phiên học đang tạm dừng" : "Sẵn sàng kích hoạt chu kỳ mới";
+  const statusText = pendingAction === "finish" ? "Đang lưu phiên học…" : pendingAction === "cancel" ? "Đang hủy phiên học…" : isRunning ? "Đang trong phiên học sâu" : isPaused ? "Phiên học đang tạm dừng" : "Sẵn sàng kích hoạt chu kỳ mới";
 
-  function run(action: () => Promise<{ ok: boolean; message?: string }>) {
+  function runAction<T>(
+    kind: TimerActionKind,
+    action: () => Promise<ActionResult<T>>,
+    optimistic: () => void,
+    commit: (data: T) => void,
+    rollback: () => void,
+  ) {
+    if (mutationInFlightRef.current || databaseUnavailable) return;
+    mutationInFlightRef.current = true;
     setMessage(null);
+    setPendingAction(kind);
+    optimistic();
     startTransition(async () => {
-      const result = await action();
-      if (!result.ok) {
-        setMessage(result.message ?? "Không thể thực hiện thao tác. Vui lòng thử lại.");
-        return;
+      try {
+        const result = await action();
+        if (result.ok) commit(result.data);
+        else {
+          rollback();
+          setMessage(result.message);
+        }
+      } catch {
+        rollback();
+        setMessage("Không thể kết nối tới máy chủ. Vui lòng thử lại.");
+      } finally {
+        mutationInFlightRef.current = false;
+        setPendingAction(null);
       }
     });
   }
+
+  function runSessionAction(kind: TimerActionKind, action: () => Promise<ActionResult<TimerSession>>, optimisticSession: TimerSession) {
+    const previous = session;
+    runAction(kind, action, () => setSession(optimisticSession), setSession, () => setSession(previous));
+  }
+
   function toggleRun() {
+    if (canQueuePause && session) {
+      const clickedAt = new Date().toISOString();
+      queuedPauseRef.current = { clickedAt, displayedSeconds: elapsed };
+      setFrozenPauseSeconds(elapsed);
+      setSession(previewPauseSession(session, clickedAt));
+      return;
+    }
     if (disabled) return;
-    if (!session) run(() => startSession(selectedCategoryId || null));
-    else if (session.status === "RUNNING") run(() => pauseSession(session.id));
-    else run(() => resumeSession(session.id));
+    const clickedAt = new Date().toISOString();
+    if (!session) {
+      setNow(Date.now());
+      const category = categories.find((item) => item.id === selectedCategoryId) ?? null;
+      runAction(
+        "start",
+        () => startSession(selectedCategoryId || null, clickedAt),
+        () => setSession(previewStartSession(category, clickedAt)),
+        (saved) => {
+          const queuedPause = queuedPauseRef.current;
+          if (!queuedPause) { setSession(saved); return; }
+          queuedPauseRef.current = null;
+          const pausedPreview = previewPauseSession(saved, queuedPause.clickedAt);
+          setSession(pausedPreview);
+          queueMicrotask(() => runAction(
+            "pause",
+            () => pauseSession(saved.id, queuedPause.clickedAt),
+            () => { setFrozenPauseSeconds(queuedPause.displayedSeconds); setSession(pausedPreview); },
+            (confirmed) => { setSession(confirmed); setFrozenPauseSeconds(null); },
+            () => { setSession(saved); setFrozenPauseSeconds(null); },
+          ));
+        },
+        () => { queuedPauseRef.current = null; setFrozenPauseSeconds(null); setSession(null); },
+      );
+    } else if (session.status === "RUNNING") {
+      const previous = session;
+      const displayedSeconds = elapsed;
+      runAction(
+        "pause",
+        () => pauseSession(session.id, clickedAt),
+        () => { setFrozenPauseSeconds(displayedSeconds); setSession(previewPauseSession(session, clickedAt)); },
+        (saved) => { setSession(saved); setFrozenPauseSeconds(null); },
+        () => { setSession(previous); setFrozenPauseSeconds(null); },
+      );
+    } else {
+      setNow(Date.now());
+      runSessionAction("resume", () => resumeSession(session.id), previewResumeSession(session, clickedAt));
+    }
   }
   function selectCategory(categoryId: string) {
-    setSelectedCategoryId(categoryId);
+    if (disabled) return;
     setCategoryOpen(false);
-    if (session) run(() => changeSessionCategory(session.id, categoryId || null));
+    if (categoryId === selectedCategoryId) return;
+    if (!session) {
+      setSelectedCategoryId(categoryId);
+      return;
+    }
+    const previousCategoryId = selectedCategoryId;
+    const previousSession = session;
+    const category = categories.find((item) => item.id === categoryId) ?? null;
+    runAction(
+      "category",
+      () => changeSessionCategory(session.id, categoryId || null),
+      () => { setSelectedCategoryId(categoryId); setSession({ ...session, category }); },
+      (saved) => { setSelectedCategoryId(saved.category?.id ?? ""); setSession(saved); },
+      () => { setSelectedCategoryId(previousCategoryId); setSession(previousSession); },
+    );
+  }
+  function finishCurrentSession() {
+    if (!session || disabled) return;
+    const previous = session;
+    runAction("finish", () => finishSession(session.id), () => setSession(null), () => setSession(null), () => setSession(previous));
   }
   function cancelCurrentSession() {
-    if (!session || !window.confirm("Hủy phiên học hiện tại? Thời gian chưa hoàn thành sẽ không được lưu.")) return;
-    run(() => cancelSession(session.id));
+    if (!session || disabled || !window.confirm("Hủy phiên học hiện tại? Thời gian chưa hoàn thành sẽ không được lưu.")) return;
+    const previous = session;
+    runAction("cancel", () => cancelSession(session.id), () => setSession(null), () => setSession(null), () => setSession(previous));
   }
 
   toggleRunRef.current = toggleRun;
-  finishSessionRef.current = () => {
-    if (session) run(() => finishSession(session.id));
-  };
+  finishSessionRef.current = finishCurrentSession;
 
   const updatePictureInPicture = useCallback(() => {
     const pipDocument = pipWindowRef.current?.document;
@@ -157,9 +249,9 @@ export function MatchaTimerWorkspace({ session, categories, timezone, dailyGoalM
     if (timer) timer.textContent = `${hours}:${minutes}:${seconds}`;
     if (category) category.textContent = categoryName;
     if (status) status.textContent = statusText;
-    if (primary) { primary.textContent = !session ? "Bắt đầu học" : isRunning ? "Tạm dừng" : "Tiếp tục học"; primary.disabled = disabled; }
+    if (primary) { primary.textContent = !session ? "Bắt đầu học" : isRunning ? "Tạm dừng" : "Tiếp tục học"; primary.disabled = disabled && !canQueuePause; }
     if (finish) { finish.disabled = !session || disabled; }
-  }, [categoryName, disabled, hours, isRunning, minutes, seconds, session, statusText]);
+  }, [canQueuePause, categoryName, disabled, hours, isRunning, minutes, seconds, session, statusText]);
 
   useEffect(() => {
     updatePictureInPicture();
@@ -197,7 +289,7 @@ export function MatchaTimerWorkspace({ session, categories, timezone, dailyGoalM
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       {zen && <button type="button" className="mb-5 inline-flex items-center gap-2 rounded-lg border border-[#e1e8df] bg-white px-3 py-2 text-xs font-semibold" onClick={() => setZen(false)}><X size={15} />Thoát Zen</button>}
 
-      {longRunning && showAlert && <section className="relative mb-6 overflow-hidden rounded-xl border border-[#e1e8df] bg-[#f0f4ed] p-4 shadow-sm sm:flex sm:items-center sm:justify-between sm:p-5"><div className="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-[#d8e8d6]/70 blur-2xl" /><div className="relative flex items-start gap-3.5"><span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg bg-[#ebd9c8] text-[#704214]"><Coffee size={18} /></span><div><div className="flex flex-wrap items-center gap-2"><h2 className="font-[family-name:var(--font-geist)] text-lg font-semibold tracking-[-.01em]">Nhắc nhở hồi phục năng lượng</h2><span className="rounded-full bg-[#ebd9c8] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#704214]">{formatDuration(elapsed)} liên tục</span></div><p className="mt-1 max-w-3xl text-sm leading-6 text-[#3c4f41]">Bạn đã duy trì sự tập trung sâu qua 8 giờ liên tục. Hãy dành thời gian uống nước và thư giãn mắt để bảo toàn hiệu suất.</p></div></div><div className="relative mt-3 flex justify-end gap-2 sm:mt-0"><button className="rounded-lg border border-[#e1e8df] bg-white px-3.5 py-2 text-sm font-medium" onClick={() => setShowAlert(false)}>Đã hiểu</button>{isRunning && <button className="inline-flex items-center gap-1.5 rounded-lg bg-[#2e5339] px-4 py-2 text-sm font-medium text-white" disabled={disabled} onClick={() => run(() => pauseSession(session!.id))}><Coffee size={15} />Nghỉ giải lao</button>}</div></section>}
+      {longRunning && showAlert && <section className="relative mb-6 overflow-hidden rounded-xl border border-[#e1e8df] bg-[#f0f4ed] p-4 shadow-sm sm:flex sm:items-center sm:justify-between sm:p-5"><div className="pointer-events-none absolute -right-12 -top-12 size-32 rounded-full bg-[#d8e8d6]/70 blur-2xl" /><div className="relative flex items-start gap-3.5"><span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg bg-[#ebd9c8] text-[#704214]"><Coffee size={18} /></span><div><div className="flex flex-wrap items-center gap-2"><h2 className="font-[family-name:var(--font-geist)] text-lg font-semibold tracking-[-.01em]">Nhắc nhở hồi phục năng lượng</h2><span className="rounded-full bg-[#ebd9c8] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#704214]">{formatDuration(elapsed)} liên tục</span></div><p className="mt-1 max-w-3xl text-sm leading-6 text-[#3c4f41]">Bạn đã duy trì sự tập trung sâu qua 8 giờ liên tục. Hãy dành thời gian uống nước và thư giãn mắt để bảo toàn hiệu suất.</p></div></div><div className="relative mt-3 flex justify-end gap-2 sm:mt-0"><button className="rounded-lg border border-[#e1e8df] bg-white px-3.5 py-2 text-sm font-medium" onClick={() => setShowAlert(false)}>Đã hiểu</button>{isRunning && <button className="inline-flex items-center gap-1.5 rounded-lg bg-[#2e5339] px-4 py-2 text-sm font-medium text-white" disabled={disabled} onClick={toggleRun}><Coffee size={15} />Nghỉ giải lao</button>}</div></section>}
       {message && <p className="mb-5 rounded-xl border border-[#f2c9c5] bg-[#fff1ef] px-4 py-3 text-sm text-[#9a3028]" role="alert">{message}</p>}
       {databaseUnavailable && <p className="mb-5 rounded-xl border border-[#ead5a6] bg-[#fff9e8] px-4 py-3 text-sm text-[#7b5d19]">Không thể kết nối database. Hãy kiểm tra cấu hình `.env` rồi thử lại.</p>}
 
@@ -206,10 +298,10 @@ export function MatchaTimerWorkspace({ session, categories, timezone, dailyGoalM
           <div className="relative flex min-h-[460px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-[#e1e8df] bg-[#ffffff] p-6 shadow-sm sm:p-10"><div className="pointer-events-none absolute -top-24 left-1/2 size-80 -translate-x-1/2 rounded-full bg-[#d8e8d6]/55 blur-3xl" />
             <div className="relative z-10 mb-6 flex w-full items-center justify-between gap-3"><div className="relative"><button type="button" aria-expanded={categoryOpen} className="inline-flex items-center gap-2 rounded-full border border-[#e1e8df] bg-[#f0f4ed] px-3 py-1.5 text-sm font-medium shadow-sm transition hover:bg-[#e6ece2]" onClick={() => setCategoryOpen((open) => !open)}><span className="size-2.5 rounded-full bg-[#2e5339]" />{categoryName}<ChevronDown size={16} className="text-[#3c4f41]" /></button>{categoryOpen && <div className="absolute left-0 top-full z-20 mt-2 w-56 rounded-xl border border-[#e1e8df] bg-[#ffffff] p-1.5 shadow-xl"><CategoryOption active={!selectedCategoryId} name="Chưa phân loại" onClick={() => selectCategory("")} />{categories.map((category) => <CategoryOption active={category.id === selectedCategoryId} key={category.id} name={category.name} onClick={() => selectCategory(category.id)} />)}</div>}</div><div className="flex items-center gap-2">{pipSupported && <button type="button" aria-pressed={pipOpen} title="Mở timer trong cửa sổ nổi" className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${pipOpen ? "bg-[#d8e8d6] text-[#2e5339]" : "bg-[#f0f4ed] text-[#3c4f41] hover:bg-[#e6ece2]"}`} onClick={openPictureInPicture}><PictureInPicture2 size={15} /><span className="hidden sm:inline">Cửa sổ nổi</span></button>}<button type="button" className="inline-flex items-center gap-1.5 rounded-full bg-[#f0f4ed] px-3 py-1.5 text-xs font-medium text-[#3c4f41] transition hover:bg-[#e6ece2]" onClick={() => setZen(true)}><TimerReset size={15} className="text-[#2e5339]" /><span className="hidden sm:inline">Chế độ Zen</span></button></div></div>
             <div className="relative z-10 my-6 flex items-center justify-center"><div className="relative grid size-72 place-items-center sm:size-80"><svg className="absolute inset-0 size-full -rotate-90" viewBox="0 0 280 280" aria-hidden="true"><circle cx="140" cy="140" r="126" fill="transparent" stroke="#d8e8d6" strokeWidth="4" /><circle cx="140" cy="140" r="126" fill="transparent" stroke="#2e5339" strokeWidth="5" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeOffset} className="transition-[stroke-dashoffset] duration-700" /></svg><div className="relative flex max-w-[78%] flex-col items-center text-center"><div className="whitespace-nowrap font-[family-name:var(--font-geist)] text-[48px] font-semibold leading-none tracking-[-.055em] text-[#2e5339] tabular-nums sm:text-[64px]"><span>{hours}</span><span className="mx-0.5 font-normal text-[#d2ddd0]">:</span><span>{minutes}</span><span className="mx-0.5 font-normal text-[#d2ddd0]">:</span><span>{seconds}</span></div><div className="mt-3 inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-[#d2ddd0] bg-[#e2eee1] px-3 py-1 text-xs font-medium text-[#2e5339]"><span className={`size-2 rounded-full ${isRunning ? "animate-ping bg-[#2e5339]" : "bg-[#9eaa9d]"}`} />{statusText}</div></div></div></div>
-            <div className="relative z-10 mt-2 flex w-full flex-wrap justify-center gap-4">{!session ? <button className="inline-flex items-center justify-center gap-3 rounded-xl bg-[#2e5339] px-10 py-3.5 font-[family-name:var(--font-geist)] text-lg font-medium text-white shadow-sm transition active:scale-95 hover:bg-[#385a3e] disabled:opacity-50" disabled={disabled} onClick={toggleRun}><Play size={22} fill="currentColor" />{pending ? "Đang bắt đầu…" : "Bắt đầu học"}</button> : <><button className="inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#2e5339] px-8 py-3 font-[family-name:var(--font-geist)] text-lg font-medium text-white shadow-sm transition active:scale-95 hover:bg-[#385a3e] disabled:opacity-50" disabled={disabled} onClick={toggleRun}>{isRunning ? <CirclePause size={22} /> : <Play size={22} fill="currentColor" />}{isRunning ? "Tạm dừng" : "Tiếp tục học"}</button><button className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e1e8df] bg-[#f0f4ed] px-7 py-3 font-[family-name:var(--font-geist)] text-lg font-medium shadow-sm transition hover:bg-[#e6ece2] disabled:opacity-50" disabled={disabled} onClick={() => run(() => finishSession(session.id))}><CheckCircle2 size={21} className="text-[#2e5339]" />Kết thúc phiên</button></>}</div>
+            <div className="relative z-10 mt-2 flex w-full flex-wrap justify-center gap-4">{!session ? <button className="inline-flex items-center justify-center gap-3 rounded-xl bg-[#2e5339] px-10 py-3.5 font-[family-name:var(--font-geist)] text-lg font-medium text-white shadow-sm transition active:scale-95 hover:bg-[#385a3e] disabled:opacity-50" disabled={disabled} onClick={toggleRun}><Play size={22} fill="currentColor" />{pendingAction === "finish" ? "Đang kết thúc…" : pendingAction === "cancel" ? "Đang hủy…" : pendingAction === "start" ? "Đang bắt đầu…" : "Bắt đầu học"}</button> : <><button className="inline-flex items-center justify-center gap-2.5 rounded-xl bg-[#2e5339] px-8 py-3 font-[family-name:var(--font-geist)] text-lg font-medium text-white shadow-sm transition active:scale-95 hover:bg-[#385a3e] disabled:opacity-50" disabled={disabled && !canQueuePause} onClick={toggleRun}>{isRunning ? <CirclePause size={22} /> : <Play size={22} fill="currentColor" />}{isRunning ? "Tạm dừng" : "Tiếp tục học"}</button><button className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e1e8df] bg-[#f0f4ed] px-7 py-3 font-[family-name:var(--font-geist)] text-lg font-medium shadow-sm transition hover:bg-[#e6ece2] disabled:opacity-50" disabled={disabled} onClick={finishCurrentSession}><CheckCircle2 size={21} className="text-[#2e5339]" />Kết thúc phiên</button></>}</div>
           </div>
 
-          <section className="rounded-2xl border border-[#e1e8df] bg-[#f0f4ed] p-6 shadow-sm"><div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-[#54735c]" /><h2 className="font-[family-name:var(--font-geist)] text-lg font-semibold">Bảng điều khiển khi Tạm Dừng</h2></div><span className="rounded-full border border-[#d5dfd2] bg-[#f6f8f5] px-2.5 py-0.5 text-[10px] font-semibold text-[#3c4f41]">Trạng thái rẽ nhánh</span></div><p className="mt-2 text-sm leading-6 text-[#3c4f41]">Khi tạm dừng, bạn có thể quay lại nhịp học, lưu phần đã làm hoặc hủy nếu bị gián đoạn ngoài ý muốn.</p><div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3"><button disabled={!isPaused || disabled} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2e5339] px-4 py-3 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-45" onClick={() => session && run(() => resumeSession(session.id))}><Play size={17} />Tiếp tục học</button><button disabled={!session || disabled} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e1e8df] bg-[#ffffff] px-4 py-3 text-sm font-medium shadow-sm disabled:cursor-not-allowed disabled:opacity-45" onClick={() => session && run(() => finishSession(session.id))}><CheckCircle2 size={17} className="text-[#2e5339]" />Lưu phiên</button><button disabled={!isPaused || disabled} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#f0ccc7] bg-[#fff2ef] px-4 py-3 text-sm font-medium text-[#a43e35] disabled:cursor-not-allowed disabled:opacity-45" onClick={cancelCurrentSession}><Trash2 size={17} />Hủy session</button></div></section>
+          <section className="rounded-2xl border border-[#e1e8df] bg-[#f0f4ed] p-6 shadow-sm"><div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><span className="size-2.5 rounded-full bg-[#54735c]" /><h2 className="font-[family-name:var(--font-geist)] text-lg font-semibold">Bảng điều khiển khi Tạm Dừng</h2></div><span className="rounded-full border border-[#d5dfd2] bg-[#f6f8f5] px-2.5 py-0.5 text-[10px] font-semibold text-[#3c4f41]">Trạng thái rẽ nhánh</span></div><p className="mt-2 text-sm leading-6 text-[#3c4f41]">Khi tạm dừng, bạn có thể quay lại nhịp học, lưu phần đã làm hoặc hủy nếu bị gián đoạn ngoài ý muốn.</p><div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3"><button disabled={!isPaused || disabled} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2e5339] px-4 py-3 text-sm font-medium text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-45" onClick={toggleRun}><Play size={17} />Tiếp tục học</button><button disabled={!session || disabled} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e1e8df] bg-[#ffffff] px-4 py-3 text-sm font-medium shadow-sm disabled:cursor-not-allowed disabled:opacity-45" onClick={finishCurrentSession}><CheckCircle2 size={17} className="text-[#2e5339]" />Lưu phiên</button><button disabled={!isPaused || disabled} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#f0ccc7] bg-[#fff2ef] px-4 py-3 text-sm font-medium text-[#a43e35] disabled:cursor-not-allowed disabled:opacity-45" onClick={cancelCurrentSession}><Trash2 size={17} />Hủy session</button></div></section>
         </section>
 
         <aside className="flex flex-col gap-6 lg:col-span-4">

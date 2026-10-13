@@ -1,6 +1,7 @@
 import { LearningStatus, Prisma } from "@/generated/prisma/client";
 import { AppError } from "@/lib/errors";
 import { getClosedDurationSeconds } from "@/lib/timer";
+import { validatePauseTimestamp, validateStartTimestamp } from "@/lib/timer-timestamp";
 import { runSerializable } from "@/lib/transactions";
 import { db } from "@/lib/db";
 
@@ -45,7 +46,7 @@ export async function getActiveSession(userId: string): Promise<ActiveSession | 
   });
 }
 
-export async function startLearningSession(userId: string, categoryId?: string | null) {
+export async function startLearningSession(userId: string, categoryId: string | null, clickedAt: string) {
   try {
     return await runSerializable(async (tx) => {
       await verifyCategory(tx, userId, categoryId);
@@ -55,7 +56,7 @@ export async function startLearningSession(userId: string, categoryId?: string |
       });
       if (active) throw new AppError("ACTIVE_SESSION_EXISTS");
 
-      const now = new Date();
+      const now = validateStartTimestamp(clickedAt, new Date());
       return tx.learningSession.create({
         data: {
           userId,
@@ -75,7 +76,7 @@ export async function startLearningSession(userId: string, categoryId?: string |
   }
 }
 
-export async function pauseLearningSession(userId: string, sessionId: string) {
+export async function pauseLearningSession(userId: string, sessionId: string, clickedAt: string) {
   return runSerializable(async (tx) => {
     const session = await getOwnedSession(tx, userId, sessionId);
     if (session.status !== LearningStatus.RUNNING) throw new AppError("INVALID_SESSION_STATE");
@@ -83,8 +84,8 @@ export async function pauseLearningSession(userId: string, sessionId: string) {
     const openInterval = session.intervals.find((interval) => !interval.endedAt);
     if (!openInterval) throw new AppError("INVALID_SESSION_STATE");
 
-    const now = new Date();
-    await tx.sessionInterval.update({ where: { id: openInterval.id }, data: { endedAt: now } });
+    const endedAt = validatePauseTimestamp(clickedAt, openInterval.startedAt, new Date());
+    await tx.sessionInterval.update({ where: { id: openInterval.id }, data: { endedAt } });
     return tx.learningSession.update({
       where: { id: session.id },
       data: { status: LearningStatus.PAUSED },

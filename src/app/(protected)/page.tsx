@@ -1,25 +1,13 @@
 import { redirect } from "next/navigation";
-import { MatchaTimerWorkspace, type MatchaSession } from "@/components/matcha-timer-workspace";
+import { MatchaTimerWorkspace } from "@/components/matcha-timer-workspace";
 import { getCurrentUser } from "@/lib/current-user";
 import { getActiveSession } from "@/lib/timer-service";
 import { getCategories } from "@/lib/category-service";
 import { getTimerSummary } from "@/lib/dashboard-service";
 import { AppError } from "@/lib/errors";
+import { serializeTimerSession, type TimerSession } from "@/lib/timer-payload";
 
 export const dynamic = "force-dynamic";
-
-function serializeSession(session: Awaited<ReturnType<typeof getActiveSession>>): MatchaSession | null {
-  if (!session) return null;
-  return {
-    id: session.id,
-    status: session.status,
-    category: session.category,
-    intervals: session.intervals.map((interval) => ({
-      startedAt: interval.startedAt.toISOString(),
-      endedAt: interval.endedAt?.toISOString() ?? null,
-    })),
-  };
-}
 
 export default async function Home() {
   let user;
@@ -30,7 +18,7 @@ export default async function Home() {
     throw error;
   }
 
-  let session: MatchaSession | null = null;
+  let session: TimerSession | null = null;
   let categories: Array<{ id: string; name: string }> = [];
   let timezone = "Asia/Bangkok";
   let dailyGoalMinutes = 120;
@@ -43,7 +31,7 @@ export default async function Home() {
       getCategories(user.id),
       getTimerSummary(user.id),
     ]);
-    session = serializeSession(active);
+    session = active ? serializeTimerSession(active) : null;
     categories = userCategories.map(({ id, name }) => ({ id, name }));
     timezone = timerSummary.timezone;
     dailyGoalMinutes = timerSummary.dailyGoalMinutes;
