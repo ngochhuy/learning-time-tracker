@@ -8,6 +8,7 @@ export const errorMessages = {
   DUPLICATE_CATEGORY: "Danh mục này đã tồn tại.",
   INVALID_CATEGORY_NAME: "Tên danh mục cần có từ 1 đến 50 ký tự.",
   INVALID_TIME_RANGE: "Khoảng thời gian không hợp lệ.",
+  INVALID_SESSION_NOTE: "Ghi chú không được vượt quá 1.000 ký tự.",
   SESSION_TIME_CONFLICT: "Khoảng thời gian trùng với một phiên học khác.",
   INVALID_TIMEZONE: "Múi giờ không hợp lệ.",
   UNAUTHORIZED: "Bạn cần đăng nhập để tiếp tục.",

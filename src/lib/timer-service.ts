@@ -4,6 +4,7 @@ import { getClosedDurationSeconds } from "@/lib/timer";
 import { validatePauseTimestamp, validateStartTimestamp } from "@/lib/timer-timestamp";
 import { runSerializable } from "@/lib/transactions";
 import { db } from "@/lib/db";
+import { normalizeSessionNote } from "@/lib/session-note";
 
 const activeSessionInclude = {
   intervals: { orderBy: { startedAt: "asc" } },
@@ -46,7 +47,8 @@ export async function getActiveSession(userId: string): Promise<ActiveSession | 
   });
 }
 
-export async function startLearningSession(userId: string, categoryId: string | null, clickedAt: string) {
+export async function startLearningSession(userId: string, categoryId: string | null, clickedAt: string, note?: string | null) {
+  const normalizedNote = normalizeSessionNote(note);
   try {
     return await runSerializable(async (tx) => {
       await verifyCategory(tx, userId, categoryId);
@@ -61,6 +63,7 @@ export async function startLearningSession(userId: string, categoryId: string | 
         data: {
           userId,
           categoryId: categoryId ?? null,
+          note: normalizedNote,
           status: LearningStatus.RUNNING,
           startedAt: now,
           intervals: { create: { startedAt: now } },
@@ -114,7 +117,8 @@ export async function resumeLearningSession(userId: string, sessionId: string) {
   });
 }
 
-export async function finishLearningSession(userId: string, sessionId: string) {
+export async function finishLearningSession(userId: string, sessionId: string, note?: string | null) {
+  const normalizedNote = note === undefined ? undefined : normalizeSessionNote(note);
   return runSerializable(async (tx) => {
     const session = await getOwnedSession(tx, userId, sessionId);
     if (session.status !== LearningStatus.RUNNING && session.status !== LearningStatus.PAUSED) {
@@ -136,9 +140,20 @@ export async function finishLearningSession(userId: string, sessionId: string) {
 
     return tx.learningSession.update({
       where: { id: session.id },
-      data: { status: LearningStatus.COMPLETED, endedAt: now, durationSeconds },
+      data: { status: LearningStatus.COMPLETED, endedAt: now, durationSeconds, ...(normalizedNote === undefined ? {} : { note: normalizedNote }) },
       include: activeSessionInclude,
     });
+  });
+}
+
+export async function saveActiveSessionNote(userId: string, sessionId: string, note: string | null) {
+  const normalizedNote = normalizeSessionNote(note);
+  return runSerializable(async (tx) => {
+    const session = await getOwnedSession(tx, userId, sessionId);
+    if (session.status !== LearningStatus.RUNNING && session.status !== LearningStatus.PAUSED) {
+      throw new AppError("INVALID_SESSION_STATE");
+    }
+    return tx.learningSession.update({ where: { id: session.id }, data: { note: normalizedNote }, include: activeSessionInclude });
   });
 }
 

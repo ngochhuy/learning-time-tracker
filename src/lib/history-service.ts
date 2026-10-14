@@ -5,6 +5,7 @@ import { adjustSessionBounds, sumIntervalSeconds } from "@/lib/session-edit";
 import { runSerializable } from "@/lib/transactions";
 import { DateTime } from "luxon";
 import { allocateIntervalsByDay } from "@/lib/dashboard-service";
+import { normalizeSessionNote } from "@/lib/session-note";
 
 const completedInclude = {
   category: { select: { id: true, name: true } },
@@ -19,7 +20,10 @@ function historyWhere(userId: string, filters: HistoryFilters): Prisma.LearningS
     status: LearningStatus.COMPLETED,
     ...(filters.uncategorized ? { categoryId: null } : filters.categoryId ? { categoryId: filters.categoryId } : {}),
     ...(filters.from || filters.to ? { startedAt: { ...(filters.from ? { gte: filters.from } : {}), ...(filters.to ? { lte: filters.to } : {}) } } : {}),
-    ...(filters.query ? { category: { name: { contains: filters.query, mode: "insensitive" } } } : {}),
+    ...(filters.query ? { OR: [
+      { category: { name: { contains: filters.query, mode: "insensitive" } } },
+      { note: { contains: filters.query, mode: "insensitive" } },
+    ] } : {}),
   };
 }
 
@@ -37,7 +41,7 @@ export async function getCompletedHistory(userId: string, filters: HistoryFilter
 export async function getHistoryExport(userId: string, filters: HistoryFilters) {
   return db.learningSession.findMany({
     where: historyWhere(userId, filters),
-    select: { startedAt: true, endedAt: true, durationSeconds: true, category: { select: { name: true } } },
+    select: { startedAt: true, endedAt: true, durationSeconds: true, note: true, category: { select: { name: true } } },
     orderBy: { startedAt: "desc" },
     take: 20_001,
   });
@@ -89,8 +93,10 @@ export async function updateCompletedSession(
   startedAt: Date,
   endedAt: Date,
   categoryId: string | null,
+  note?: string | null,
 ) {
   if (startedAt >= endedAt || endedAt > new Date()) throw new AppError("INVALID_TIME_RANGE");
+  const normalizedNote = note === undefined ? undefined : normalizeSessionNote(note);
   return runSerializable(async (tx) => {
     const session = await tx.learningSession.findFirst({
       where: { id: sessionId, userId, status: LearningStatus.COMPLETED },
@@ -111,7 +117,7 @@ export async function updateCompletedSession(
     if (durationSeconds < 1) throw new AppError("INVALID_TIME_RANGE");
     return tx.learningSession.update({
       where: { id: sessionId },
-      data: { startedAt, endedAt, categoryId: validCategoryId, durationSeconds },
+      data: { startedAt, endedAt, categoryId: validCategoryId, durationSeconds, ...(normalizedNote === undefined ? {} : { note: normalizedNote }) },
       include: completedInclude,
     });
   });

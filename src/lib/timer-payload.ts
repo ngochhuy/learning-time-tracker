@@ -6,6 +6,7 @@ export type TimerSession = {
   status: LearningStatus;
   intervals: Array<{ startedAt: string; endedAt: string | null }>;
   category: { id: string; name: string } | null;
+  note: string | null;
 };
 
 export function serializeTimerSession(session: ActiveSession): TimerSession {
@@ -13,6 +14,7 @@ export function serializeTimerSession(session: ActiveSession): TimerSession {
     id: session.id,
     status: session.status,
     category: session.category,
+    note: session.note,
     intervals: session.intervals.map((interval) => ({
       startedAt: interval.startedAt.toISOString(),
       endedAt: interval.endedAt?.toISOString() ?? null,
@@ -20,11 +22,12 @@ export function serializeTimerSession(session: ActiveSession): TimerSession {
   };
 }
 
-export function previewStartSession(category: TimerSession["category"], now: string): TimerSession {
+export function previewStartSession(category: TimerSession["category"], now: string, note: string | null = null): TimerSession {
   return {
     id: "pending-start",
     status: "RUNNING",
     category,
+    note,
     intervals: [{ startedAt: now, endedAt: null }],
   };
 }

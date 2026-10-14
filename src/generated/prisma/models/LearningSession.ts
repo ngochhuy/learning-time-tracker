@@ -42,6 +42,7 @@ export type LearningSessionMinAggregateOutputType = {
   startedAt: Date | null
   endedAt: Date | null
   durationSeconds: number | null
+  note: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -54,6 +55,7 @@ export type LearningSessionMaxAggregateOutputType = {
   startedAt: Date | null
   endedAt: Date | null
   durationSeconds: number | null
+  note: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -66,6 +68,7 @@ export type LearningSessionCountAggregateOutputType = {
   startedAt: number
   endedAt: number
   durationSeconds: number
+  note: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -88,6 +91,7 @@ export type LearningSessionMinAggregateInputType = {
   startedAt?: true
   endedAt?: true
   durationSeconds?: true
+  note?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -100,6 +104,7 @@ export type LearningSessionMaxAggregateInputType = {
   startedAt?: true
   endedAt?: true
   durationSeconds?: true
+  note?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -112,6 +117,7 @@ export type LearningSessionCountAggregateInputType = {
   startedAt?: true
   endedAt?: true
   durationSeconds?: true
+  note?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -211,6 +217,7 @@ export type LearningSessionGroupByOutputType = {
   startedAt: Date
   endedAt: Date | null
   durationSeconds: number | null
+  note: string | null
   createdAt: Date
   updatedAt: Date
   _count: LearningSessionCountAggregateOutputType | null
@@ -246,6 +253,7 @@ export type LearningSessionWhereInput = {
   startedAt?: Prisma.DateTimeFilter<"LearningSession"> | Date | string
   endedAt?: Prisma.DateTimeNullableFilter<"LearningSession"> | Date | string | null
   durationSeconds?: Prisma.IntNullableFilter<"LearningSession"> | number | null
+  note?: Prisma.StringNullableFilter<"LearningSession"> | string | null
   createdAt?: Prisma.DateTimeFilter<"LearningSession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"LearningSession"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -261,6 +269,7 @@ export type LearningSessionOrderByWithRelationInput = {
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   durationSeconds?: Prisma.SortOrderInput | Prisma.SortOrder
+  note?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -279,6 +288,7 @@ export type LearningSessionWhereUniqueInput = Prisma.AtLeast<{
   startedAt?: Prisma.DateTimeFilter<"LearningSession"> | Date | string
   endedAt?: Prisma.DateTimeNullableFilter<"LearningSession"> | Date | string | null
   durationSeconds?: Prisma.IntNullableFilter<"LearningSession"> | number | null
+  note?: Prisma.StringNullableFilter<"LearningSession"> | string | null
   createdAt?: Prisma.DateTimeFilter<"LearningSession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"LearningSession"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -294,6 +304,7 @@ export type LearningSessionOrderByWithAggregationInput = {
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   durationSeconds?: Prisma.SortOrderInput | Prisma.SortOrder
+  note?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.LearningSessionCountOrderByAggregateInput
@@ -314,6 +325,7 @@ export type LearningSessionScalarWhereWithAggregatesInput = {
   startedAt?: Prisma.DateTimeWithAggregatesFilter<"LearningSession"> | Date | string
   endedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"LearningSession"> | Date | string | null
   durationSeconds?: Prisma.IntNullableWithAggregatesFilter<"LearningSession"> | number | null
+  note?: Prisma.StringNullableWithAggregatesFilter<"LearningSession"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"LearningSession"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"LearningSession"> | Date | string
 }
@@ -324,6 +336,7 @@ export type LearningSessionCreateInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   durationSeconds?: number | null
+  note?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutLearningInput
@@ -339,6 +352,7 @@ export type LearningSessionUncheckedCreateInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   durationSeconds?: number | null
+  note?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   intervals?: Prisma.SessionIntervalUncheckedCreateNestedManyWithoutSessionInput
@@ -350,6 +364,7 @@ export type LearningSessionUpdateInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   durationSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutLearningNestedInput
@@ -365,6 +380,7 @@ export type LearningSessionUncheckedUpdateInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   durationSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   intervals?: Prisma.SessionIntervalUncheckedUpdateManyWithoutSessionNestedInput
@@ -378,6 +394,7 @@ export type LearningSessionCreateManyInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   durationSeconds?: number | null
+  note?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -388,6 +405,7 @@ export type LearningSessionUpdateManyMutationInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   durationSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -400,6 +418,7 @@ export type LearningSessionUncheckedUpdateManyInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   durationSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -422,6 +441,7 @@ export type LearningSessionCountOrderByAggregateInput = {
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
   durationSeconds?: Prisma.SortOrder
+  note?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -438,6 +458,7 @@ export type LearningSessionMaxOrderByAggregateInput = {
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
   durationSeconds?: Prisma.SortOrder
+  note?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -450,6 +471,7 @@ export type LearningSessionMinOrderByAggregateInput = {
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
   durationSeconds?: Prisma.SortOrder
+  note?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -579,6 +601,7 @@ export type LearningSessionCreateWithoutUserInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   durationSeconds?: number | null
+  note?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   category?: Prisma.CategoryCreateNestedOneWithoutSessionsInput
@@ -592,6 +615,7 @@ export type LearningSessionUncheckedCreateWithoutUserInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   durationSeconds?: number | null
+  note?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   intervals?: Prisma.SessionIntervalUncheckedCreateNestedManyWithoutSessionInput
@@ -634,6 +658,7 @@ export type LearningSessionScalarWhereInput = {
   startedAt?: Prisma.DateTimeFilter<"LearningSession"> | Date | string
   endedAt?: Prisma.DateTimeNullableFilter<"LearningSession"> | Date | string | null
   durationSeconds?: Prisma.IntNullableFilter<"LearningSession"> | number | null
+  note?: Prisma.StringNullableFilter<"LearningSession"> | string | null
   createdAt?: Prisma.DateTimeFilter<"LearningSession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"LearningSession"> | Date | string
 }
@@ -644,6 +669,7 @@ export type LearningSessionCreateWithoutCategoryInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   durationSeconds?: number | null
+  note?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutLearningInput
@@ -657,6 +683,7 @@ export type LearningSessionUncheckedCreateWithoutCategoryInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   durationSeconds?: number | null
+  note?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   intervals?: Prisma.SessionIntervalUncheckedCreateNestedManyWithoutSessionInput
@@ -694,6 +721,7 @@ export type LearningSessionCreateWithoutIntervalsInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   durationSeconds?: number | null
+  note?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutLearningInput
@@ -708,6 +736,7 @@ export type LearningSessionUncheckedCreateWithoutIntervalsInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   durationSeconds?: number | null
+  note?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -734,6 +763,7 @@ export type LearningSessionUpdateWithoutIntervalsInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   durationSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutLearningNestedInput
@@ -748,6 +778,7 @@ export type LearningSessionUncheckedUpdateWithoutIntervalsInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   durationSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -759,6 +790,7 @@ export type LearningSessionCreateManyUserInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   durationSeconds?: number | null
+  note?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -769,6 +801,7 @@ export type LearningSessionUpdateWithoutUserInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   durationSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   category?: Prisma.CategoryUpdateOneWithoutSessionsNestedInput
@@ -782,6 +815,7 @@ export type LearningSessionUncheckedUpdateWithoutUserInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   durationSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   intervals?: Prisma.SessionIntervalUncheckedUpdateManyWithoutSessionNestedInput
@@ -794,6 +828,7 @@ export type LearningSessionUncheckedUpdateManyWithoutUserInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   durationSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -805,6 +840,7 @@ export type LearningSessionCreateManyCategoryInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   durationSeconds?: number | null
+  note?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -815,6 +851,7 @@ export type LearningSessionUpdateWithoutCategoryInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   durationSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutLearningNestedInput
@@ -828,6 +865,7 @@ export type LearningSessionUncheckedUpdateWithoutCategoryInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   durationSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   intervals?: Prisma.SessionIntervalUncheckedUpdateManyWithoutSessionNestedInput
@@ -840,6 +878,7 @@ export type LearningSessionUncheckedUpdateManyWithoutCategoryInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   durationSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -883,6 +922,7 @@ export type LearningSessionSelect<ExtArgs extends runtime.Types.Extensions.Inter
   startedAt?: boolean
   endedAt?: boolean
   durationSeconds?: boolean
+  note?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -899,6 +939,7 @@ export type LearningSessionSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   startedAt?: boolean
   endedAt?: boolean
   durationSeconds?: boolean
+  note?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -913,6 +954,7 @@ export type LearningSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   startedAt?: boolean
   endedAt?: boolean
   durationSeconds?: boolean
+  note?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -927,11 +969,12 @@ export type LearningSessionSelectScalar = {
   startedAt?: boolean
   endedAt?: boolean
   durationSeconds?: boolean
+  note?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type LearningSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "categoryId" | "status" | "startedAt" | "endedAt" | "durationSeconds" | "createdAt" | "updatedAt", ExtArgs["result"]["learningSession"]>
+export type LearningSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "categoryId" | "status" | "startedAt" | "endedAt" | "durationSeconds" | "note" | "createdAt" | "updatedAt", ExtArgs["result"]["learningSession"]>
 export type LearningSessionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   category?: boolean | Prisma.LearningSession$categoryArgs<ExtArgs>
@@ -962,6 +1005,7 @@ export type $LearningSessionPayload<ExtArgs extends runtime.Types.Extensions.Int
     startedAt: Date
     endedAt: Date | null
     durationSeconds: number | null
+    note: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["learningSession"]>
@@ -1397,6 +1441,7 @@ export interface LearningSessionFieldRefs {
   readonly startedAt: Prisma.FieldRef<"LearningSession", 'DateTime'>
   readonly endedAt: Prisma.FieldRef<"LearningSession", 'DateTime'>
   readonly durationSeconds: Prisma.FieldRef<"LearningSession", 'Int'>
+  readonly note: Prisma.FieldRef<"LearningSession", 'String'>
   readonly createdAt: Prisma.FieldRef<"LearningSession", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"LearningSession", 'DateTime'>
 }

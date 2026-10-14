@@ -2,7 +2,7 @@
 
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { finishSession, pauseSession, startSession } from "@/app/actions/timer";
+import { finishSession, pauseSession, saveSessionNote, startSession } from "@/app/actions/timer";
 import { MatchaTimerWorkspace } from "@/components/matcha-timer-workspace";
 import type { ActionResult } from "@/lib/errors";
 import type { TimerSession } from "@/lib/timer-payload";
@@ -18,12 +18,14 @@ vi.mock("@/app/actions/timer", () => ({
   finishSession: vi.fn(),
   cancelSession: vi.fn(),
   changeSessionCategory: vi.fn(),
+  saveSessionNote: vi.fn(),
 }));
 
 const baseSession: TimerSession = {
   id: "saved-session",
   status: "RUNNING",
   category: null,
+  note: null,
   intervals: [{ startedAt: new Date(Date.now() - 60_000).toISOString(), endedAt: null }],
 };
 
@@ -41,6 +43,7 @@ afterEach(() => {
   cleanup();
   vi.clearAllMocks();
   vi.useRealTimers();
+  window.sessionStorage.clear();
 });
 
 describe("optimistic timer controls", () => {
@@ -66,7 +69,7 @@ describe("optimistic timer controls", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Bắt đầu học" }));
     expect(screen.getByText("Đang trong phiên học sâu")).toBeDefined();
-    expect(vi.mocked(startSession)).toHaveBeenCalledWith(null, expect.any(String));
+    expect(vi.mocked(startSession)).toHaveBeenCalledWith(null, expect.any(String), "");
 
     await act(async () => resolveStart({ ok: true, data: baseSession }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Tạm dừng" }).hasAttribute("disabled")).toBe(false));
@@ -173,5 +176,60 @@ describe("optimistic timer controls", () => {
     await act(async () => resolveFinish({ ok: false, code: "TRANSACTION_CONFLICT", message: "Vui lòng thử lại." }));
     expect(screen.getByText("Đang trong phiên học sâu")).toBeDefined();
     expect(screen.getByRole("alert").textContent).toContain("Vui lòng thử lại.");
+  });
+
+  it("sends a draft note when starting and the latest text when finishing", async () => {
+    vi.mocked(startSession).mockResolvedValue({ ok: true, data: { ...baseSession, note: "Mục tiêu ban đầu" } });
+    vi.mocked(finishSession).mockResolvedValue({ ok: true, data: { id: baseSession.id } });
+    renderTimer(null);
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Ghi chú phiên học" }), { target: { value: "Mục tiêu ban đầu" } });
+    fireEvent.click(screen.getByRole("button", { name: "Bắt đầu học" }));
+    expect(vi.mocked(startSession)).toHaveBeenCalledWith(null, expect.any(String), "Mục tiêu ban đầu");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Kết thúc phiên" }).hasAttribute("disabled")).toBe(false));
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Ghi chú phiên học" }), { target: { value: "Đã hoàn thành bài tập" } });
+    fireEvent.click(screen.getByRole("button", { name: "Kết thúc phiên" }));
+    expect(vi.mocked(finishSession)).toHaveBeenCalledWith(baseSession.id, "Đã hoàn thành bài tập");
+  });
+
+  it("restores the saved note on reload and auto-saves edits after a pause in typing", async () => {
+    vi.mocked(saveSessionNote).mockResolvedValue({ ok: true, data: { ...baseSession, note: "Nội dung mới" } });
+    renderTimer({ ...baseSession, note: "Nội dung cũ" });
+    const field = screen.getByRole<HTMLTextAreaElement>("textbox", { name: "Ghi chú phiên học" });
+    expect(field.value).toBe("Nội dung cũ");
+
+    fireEvent.change(field, { target: { value: "Nội dung mới" } });
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 750)); });
+    expect(vi.mocked(saveSessionNote)).toHaveBeenCalledWith(baseSession.id, "Nội dung mới");
+    expect(screen.getByText("Đã lưu ghi chú")).toBeDefined();
+  });
+
+  it("recovers a not-yet-saved edit only for the same session after reload", async () => {
+    renderTimer({ ...baseSession, note: "Nội dung đã lưu" });
+    fireEvent.change(screen.getByRole("textbox", { name: "Ghi chú phiên học" }), { target: { value: "Vừa gõ xong" } });
+    cleanup();
+
+    renderTimer({ ...baseSession, note: "Nội dung đã lưu" });
+    await waitFor(() => expect(screen.getByRole<HTMLTextAreaElement>("textbox", { name: "Ghi chú phiên học" }).value).toBe("Vừa gõ xong"));
+    cleanup();
+
+    renderTimer({ ...baseSession, id: "another-account-session", note: "Ghi chú khác" });
+    expect(screen.getByRole<HTMLTextAreaElement>("textbox", { name: "Ghi chú phiên học" }).value).toBe("Ghi chú khác");
+  });
+
+  it("saves the latest note if text is reverted while an earlier auto-save is pending", async () => {
+    let resolveOldSave!: (result: ActionResult<TimerSession>) => void;
+    vi.mocked(saveSessionNote)
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveOldSave = resolve; }))
+      .mockResolvedValue({ ok: true, data: { ...baseSession, note: "A" } });
+    renderTimer({ ...baseSession, note: "A" });
+    const field = screen.getByRole<HTMLTextAreaElement>("textbox", { name: "Ghi chú phiên học" });
+
+    fireEvent.change(field, { target: { value: "B" } });
+    await waitFor(() => expect(saveSessionNote).toHaveBeenCalledWith(baseSession.id, "B"));
+    fireEvent.change(field, { target: { value: "A" } });
+    await act(async () => resolveOldSave({ ok: true, data: { ...baseSession, note: "B" } }));
+    await waitFor(() => expect(saveSessionNote).toHaveBeenCalledWith(baseSession.id, "A"));
   });
 });

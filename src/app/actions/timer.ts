@@ -11,6 +11,7 @@ import {
   finishLearningSession,
   pauseLearningSession,
   resumeLearningSession,
+  saveActiveSessionNote,
   startLearningSession,
 } from "@/lib/timer-service";
 
@@ -24,10 +25,10 @@ function refreshCompletedSessionViews() {
   revalidatePath("/history");
 }
 
-export async function startSession(categoryId: string | null, clickedAt: string): Promise<ActionResult<TimerSession>> {
+export async function startSession(categoryId: string | null, clickedAt: string, note?: string | null): Promise<ActionResult<TimerSession>> {
   try {
     const user = await getCurrentUser();
-    const session = await startLearningSession(user.id, optionalId.parse(categoryId) ?? null, clickedAt);
+    const session = await startLearningSession(user.id, optionalId.parse(categoryId) ?? null, clickedAt, note);
     return { ok: true, data: serializeTimerSession(session) };
   } catch (error) {
     return toActionError(error);
@@ -54,12 +55,22 @@ export async function resumeSession(sessionId: string): Promise<ActionResult<Tim
   }
 }
 
-export async function finishSession(sessionId: string): Promise<ActionResult<{ id: string }>> {
+export async function finishSession(sessionId: string, note?: string | null): Promise<ActionResult<{ id: string }>> {
   try {
     const user = await getCurrentUser();
-    const session = await finishLearningSession(user.id, sessionIdSchema.parse(sessionId));
+    const session = await finishLearningSession(user.id, sessionIdSchema.parse(sessionId), note);
     refreshCompletedSessionViews();
     return { ok: true, data: { id: session.id } };
+  } catch (error) {
+    return toActionError(error);
+  }
+}
+
+export async function saveSessionNote(sessionId: string, note: string | null): Promise<ActionResult<TimerSession>> {
+  try {
+    const user = await getCurrentUser();
+    const session = await saveActiveSessionNote(user.id, sessionIdSchema.parse(sessionId), note);
+    return { ok: true, data: serializeTimerSession(session) };
   } catch (error) {
     return toActionError(error);
   }

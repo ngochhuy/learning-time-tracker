@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { CheckCircle2, ChevronDown, CirclePause, Coffee, Edit3, PictureInPicture2, Play, TimerReset, Trash2, X } from "lucide-react";
 import { useAppShell } from "@/components/matcha-app-shell";
-import { cancelSession, changeSessionCategory, finishSession, pauseSession, resumeSession, startSession } from "@/app/actions/timer";
+import { cancelSession, changeSessionCategory, finishSession, pauseSession, resumeSession, saveSessionNote, startSession } from "@/app/actions/timer";
 import { formatDuration } from "@/lib/utils";
 import type { ActionResult } from "@/lib/errors";
 import { previewPauseSession, previewResumeSession, previewStartSession, type TimerSession } from "@/lib/timer-payload";
+import { MAX_SESSION_NOTE_LENGTH } from "@/lib/session-note";
 
 type Category = { id: string; name: string };
 type TimerActionKind = "start" | "pause" | "resume" | "finish" | "cancel" | "category";
@@ -29,8 +30,8 @@ declare global {
   }
 }
 
-const MOCK_SESSION_GOAL = "Hoàn thành bài tập Thuật toán và đọc tài liệu về giao dịch phân tán.";
 const subscribeToPictureInPictureAvailability = () => () => undefined;
+const noteDraftKey = (sessionId: string) => `focuslearn-session-note:${sessionId}`;
 
 function getElapsedSeconds(session: TimerSession, now: number) {
   return session.intervals.reduce((total, interval) => {
@@ -59,7 +60,21 @@ export function MatchaTimerWorkspace({ session: serverSession, categories, timez
   }
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [showAlert, setShowAlert] = useState(true);
-  const [sessionGoal, setSessionGoal] = useState(MOCK_SESSION_GOAL);
+  const [noteDraft, setNoteDraft] = useState(serverSession?.note ?? "");
+  const noteRef = useRef(serverSession?.note ?? "");
+  const savedNoteRef = useRef(serverSession?.note ?? "");
+  const [noteSessionId, setNoteSessionId] = useState(serverSession?.id ?? null);
+  const [noteSaveState, setNoteSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [noteSaveRevision, setNoteSaveRevision] = useState(0);
+  if ((serverSession?.id ?? null) !== noteSessionId) {
+    setNoteSessionId(serverSession?.id ?? null);
+    if (serverSession) {
+      noteRef.current = serverSession.note ?? "";
+      savedNoteRef.current = serverSession.note ?? "";
+      setNoteDraft(serverSession.note ?? "");
+      setNoteSaveState("saved");
+    }
+  }
   const [message, setMessage] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<TimerActionKind | null>(null);
   const pipSupported = useSyncExternalStore(
@@ -77,6 +92,48 @@ export function MatchaTimerWorkspace({ session: serverSession, categories, timez
 
   // The shell mirrors this server-provided setting when the Timer segment mounts or refreshes.
   useEffect(() => setTimezone(timezone), [setTimezone, timezone]);
+
+  const persistedSessionId = serverSession?.id;
+  const persistedNote = serverSession?.note;
+  useEffect(() => {
+    if (!persistedSessionId) return;
+    const draft = window.sessionStorage.getItem(noteDraftKey(persistedSessionId));
+    if (draft === null || draft === (persistedNote ?? "")) return;
+    noteRef.current = draft.slice(0, MAX_SESSION_NOTE_LENGTH);
+    setNoteDraft(noteRef.current);
+  }, [persistedSessionId, persistedNote]);
+
+  const activeNoteSessionId = session?.id;
+  const activeNoteSessionIdRef = useRef(activeNoteSessionId);
+  activeNoteSessionIdRef.current = activeNoteSessionId;
+  useEffect(() => {
+    if (!activeNoteSessionId || activeNoteSessionId === "pending-start" || noteDraft.trim() === savedNoteRef.current) return;
+    const sessionId = activeNoteSessionId;
+    const nextNote = noteDraft;
+    const timeout = window.setTimeout(async () => {
+      setNoteSaveState("saving");
+      try {
+        const result = await saveSessionNote(sessionId, nextNote);
+        if (activeNoteSessionIdRef.current !== sessionId) return;
+        if (!result.ok) {
+          if (noteRef.current === nextNote) setNoteSaveState("error");
+          return;
+        }
+        savedNoteRef.current = result.data.note ?? "";
+        if (noteRef.current.trim() === savedNoteRef.current) {
+          window.sessionStorage.removeItem(noteDraftKey(sessionId));
+          setNoteSaveState("saved");
+        } else {
+          window.sessionStorage.setItem(noteDraftKey(sessionId), noteRef.current);
+          setNoteSaveState("idle");
+          setNoteSaveRevision((revision) => revision + 1);
+        }
+      } catch {
+        if (activeNoteSessionIdRef.current === sessionId && noteRef.current === nextNote) setNoteSaveState("error");
+      }
+    }, 700);
+    return () => window.clearTimeout(timeout);
+  }, [activeNoteSessionId, noteDraft, noteSaveRevision]);
 
   useEffect(() => {
     if (session?.status !== "RUNNING") return;
@@ -170,11 +227,17 @@ export function MatchaTimerWorkspace({ session: serverSession, categories, timez
     if (!session) {
       setNow(Date.now());
       const category = categories.find((item) => item.id === selectedCategoryId) ?? null;
+      const startingNote = noteRef.current;
       runAction(
         "start",
-        () => startSession(selectedCategoryId || null, clickedAt),
-        () => setSession(previewStartSession(category, clickedAt)),
+        () => startSession(selectedCategoryId || null, clickedAt, startingNote),
+        () => setSession(previewStartSession(category, clickedAt, startingNote)),
         (saved) => {
+          savedNoteRef.current = saved.note ?? "";
+          if (noteRef.current.trim() !== savedNoteRef.current) {
+            window.sessionStorage.setItem(noteDraftKey(saved.id), noteRef.current);
+          }
+          setNoteSaveState(noteRef.current.trim() === savedNoteRef.current ? "saved" : "idle");
           const queuedPause = queuedPauseRef.current;
           if (!queuedPause) { setSession(saved); return; }
           queuedPauseRef.current = null;
@@ -227,12 +290,19 @@ export function MatchaTimerWorkspace({ session: serverSession, categories, timez
   function finishCurrentSession() {
     if (!session || disabled) return;
     const previous = session;
-    runAction("finish", () => finishSession(session.id), () => setSession(null), () => setSession(null), () => setSession(previous));
+    const finishingNote = noteRef.current;
+    runAction("finish", () => finishSession(session.id, finishingNote), () => setSession(null), () => {
+      setSession(null); noteRef.current = ""; savedNoteRef.current = ""; setNoteDraft(""); setNoteSaveState("idle");
+      window.sessionStorage.removeItem(noteDraftKey(previous.id));
+    }, () => setSession(previous));
   }
   function cancelCurrentSession() {
     if (!session || disabled || !window.confirm("Hủy phiên học hiện tại? Thời gian chưa hoàn thành sẽ không được lưu.")) return;
     const previous = session;
-    runAction("cancel", () => cancelSession(session.id), () => setSession(null), () => setSession(null), () => setSession(previous));
+    runAction("cancel", () => cancelSession(session.id), () => setSession(null), () => {
+      setSession(null); noteRef.current = ""; savedNoteRef.current = ""; setNoteDraft(""); setNoteSaveState("idle");
+      window.sessionStorage.removeItem(noteDraftKey(previous.id));
+    }, () => setSession(previous));
   }
 
   toggleRunRef.current = toggleRun;
@@ -305,7 +375,16 @@ export function MatchaTimerWorkspace({ session: serverSession, categories, timez
         </section>
 
         <aside className="flex flex-col gap-6 lg:col-span-4">
-          <section className="flex flex-col gap-3 rounded-2xl border border-[#e1e8df] bg-[#ffffff] p-6 shadow-sm"><div className="flex items-center justify-between"><h2 className="text-xs font-semibold uppercase tracking-[.12em] text-[#3c4f41]">Mục tiêu phiên</h2><Edit3 size={18} className="text-[#2e5339]" /></div><textarea value={sessionGoal} onChange={(event) => setSessionGoal(event.target.value.slice(0, 240))} rows={3} className="w-full resize-none rounded-xl border border-[#e1e8df] bg-[#f0f4ed] p-3.5 text-sm leading-6 outline-none transition focus:border-[#2e5339] focus:bg-white" placeholder="Ghi chú mục tiêu phiên này…" /><div className="flex justify-between text-[11px] text-[#3c4f41]"><span className="rounded bg-[#eaf0df] px-1.5 py-0.5">Mock data · chưa lưu database</span><span className="font-mono">{sessionGoal.length}/240</span></div></section>
+          <section className="flex flex-col gap-3 rounded-2xl border border-[#e1e8df] bg-[#ffffff] p-6 shadow-sm"><div className="flex items-center justify-between"><h2 className="text-xs font-semibold uppercase tracking-[.12em] text-[#3c4f41]">Ghi chú phiên học</h2><Edit3 size={18} className="text-[#2e5339]" /></div><textarea aria-label="Ghi chú phiên học" value={noteDraft} onChange={(event) => {
+            const next = event.target.value.slice(0, MAX_SESSION_NOTE_LENGTH);
+            noteRef.current = next;
+            setNoteDraft(next);
+            setNoteSaveState(next.trim() === savedNoteRef.current ? "saved" : "idle");
+            if (session && session.id !== "pending-start") {
+              if (next.trim() === savedNoteRef.current) window.sessionStorage.removeItem(noteDraftKey(session.id));
+              else window.sessionStorage.setItem(noteDraftKey(session.id), next);
+            }
+          }} rows={3} maxLength={MAX_SESSION_NOTE_LENGTH} className="w-full resize-none rounded-xl border border-[#e1e8df] bg-[#f0f4ed] p-3.5 text-sm leading-6 outline-none transition focus:border-[#2e5339] focus:bg-white" placeholder="Bạn muốn học gì, hoặc đã hoàn thành những gì?" /><div className="flex justify-between gap-3 text-[11px] text-[#3c4f41]"><span aria-live="polite" className={`rounded px-1.5 py-0.5 ${noteSaveState === "error" ? "bg-[#fff1ef] text-[#9a3028]" : "bg-[#eaf0df]"}`}>{!session || session.id === "pending-start" ? "Bản nháp · lưu khi bắt đầu" : noteSaveState === "saving" ? "Đang lưu ghi chú…" : noteSaveState === "error" ? "Chưa lưu được · chỉnh sửa để thử lại" : noteSaveState === "saved" ? "Đã lưu ghi chú" : "Sẽ tự lưu sau khi ngừng gõ"}</span><span className="font-mono">{noteDraft.length}/{MAX_SESSION_NOTE_LENGTH}</span></div></section>
           <section className="flex flex-col gap-4 rounded-2xl border border-[#e1e8df] bg-[#ffffff] p-6 shadow-sm"><div className="flex items-center justify-between"><h2 className="text-xs font-semibold uppercase tracking-[.12em] text-[#3c4f41]">Nhịp Pomodoro</h2><span className="rounded-full bg-[#e2eee1] px-2 py-0.5 text-[10px] font-semibold text-[#2e5339]">Chu kỳ 4/4 · mock</span></div><div className="grid grid-cols-2 gap-2.5"><button type="button" className="rounded-xl border border-[#e1e8df] bg-[#e6ece2] p-3 text-left"><span className="block text-[11px] text-[#3c4f41]">Học tập</span><strong className="font-[family-name:var(--font-geist)] text-lg text-[#2e5339]">25 phút</strong></button><button type="button" className="rounded-xl border border-[#e1e8df] bg-[#f0f4ed] p-3 text-left"><span className="block text-[11px] text-[#3c4f41]">Giải lao ngắn</span><strong className="font-[family-name:var(--font-geist)] text-lg">5 phút</strong></button></div><div><div className="mb-1.5 flex justify-between text-[11px] text-[#3c4f41]"><span>Tiến trình hoàn thành mục tiêu ngày</span><strong className="text-[#2e5339]">{goalPercent}%</strong></div><div className="h-1.5 overflow-hidden rounded-full bg-[#e6ece2]"><div className="h-full rounded-full bg-[#2e5339] transition-all" style={{ width: `${goalPercent}%` }} /></div></div></section>
           <section className="rounded-2xl border border-[#e1e8df] bg-[#ffffff] p-6 shadow-sm"><h2 className="text-xs font-semibold uppercase tracking-[.12em] text-[#3c4f41]">Phím tắt nhanh</h2><div className="mt-3 flex flex-col gap-2"><Shortcut label="Tạm dừng / Bắt đầu" keys={["Space"]} /><Shortcut label="Kết thúc và lưu" keys={["Ctrl", "Enter"]} /><Shortcut label="Hủy phiên học" keys={["Esc"]} /><Shortcut label="Bật / tắt Zen" keys={["Z"]} /></div></section>
         </aside>

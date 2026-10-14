@@ -1147,6 +1147,7 @@ export const LearningSessionScalarFieldEnum = {
   startedAt: 'startedAt',
   endedAt: 'endedAt',
   durationSeconds: 'durationSeconds',
+  note: 'note',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

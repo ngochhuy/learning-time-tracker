@@ -31,18 +31,30 @@
   --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
   --text-label-xs: 11px;
   --text-label-xs--line-height: 14px;
+  --text-label-xs--letter-spacing: .04em;
+  --text-label-xs--font-weight: 600;
   --text-label-md: 12px;
   --text-label-md--line-height: 16px;
+  --text-label-md--letter-spacing: .02em;
+  --text-label-md--font-weight: 500;
   --text-label-lg: 14px;
   --text-label-lg--line-height: 20px;
+  --text-label-lg--letter-spacing: .01em;
+  --text-label-lg--font-weight: 500;
   --text-body-sm: 13px;
   --text-body-sm--line-height: 20px;
+  --text-body-sm--font-weight: 400;
   --text-body-md: 14px;
   --text-body-md--line-height: 22px;
+  --text-body-md--font-weight: 400;
   --text-headline-sm: 18px;
   --text-headline-sm--line-height: 26px;
+  --text-headline-sm--letter-spacing: -.01em;
+  --text-headline-sm--font-weight: 500;
   --text-headline-lg: 28px;
   --text-headline-lg--line-height: 36px;
+  --text-headline-lg--letter-spacing: -.02em;
+  --text-headline-lg--font-weight: 600;
   --text-timer-display: 88px;
   --spacing-space-xs: .25rem;
   --spacing-space-sm: .5rem;
@@ -55,6 +67,17 @@
 html { background: var(--background); }
 body { background: var(--background); color: var(--foreground); font-family: var(--font-inter), system-ui, sans-serif; font-size: 16px; line-height: 1.5; font-synthesis: none; text-rendering: optimizeLegibility; }
 button { font: inherit; }
+
+/* History table headings need a stronger weight than the supporting row text. */
+.history-table-head th {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  font-synthesis: weight;
+  line-height: 18px;
+  letter-spacing: .035em;
+}
+.history-stat-label { font-synthesis: weight; }
 
 /* Matcha & Sage dark palette. Existing screens use the light palette directly
    in Tailwind utilities, so these targeted overrides keep every shared surface

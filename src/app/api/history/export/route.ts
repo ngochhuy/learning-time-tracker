@@ -36,9 +36,10 @@ export async function GET(request: Request) {
     endedAt: session.endedAt?.toISOString() ?? "",
     durationSeconds: session.durationSeconds ?? 0,
     category: session.category?.name ?? "Chưa phân loại",
+    note: session.note ?? "",
   }));
   const headers = { "Cache-Control": "private, no-store", "Content-Disposition": `attachment; filename="focuslearn-history.${format}"` };
   if (format === "json") return Response.json(rows, { headers });
-  const lines = ["startedAt,endedAt,durationSeconds,category", ...rows.map((row) => [row.startedAt, row.endedAt, row.durationSeconds, row.category].map(csvField).join(","))];
+  const lines = ["startedAt,endedAt,durationSeconds,category,note", ...rows.map((row) => [row.startedAt, row.endedAt, row.durationSeconds, row.category, row.note].map(csvField).join(","))];
   return new Response(`\uFEFF${lines.join("\r\n")}`, { headers: { ...headers, "Content-Type": "text/csv; charset=utf-8" } });
 }

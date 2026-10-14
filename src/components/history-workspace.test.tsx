@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { updateSession } from "@/app/actions/history";
 import { HistoryWorkspace } from "@/components/history-workspace";
 
 const push = vi.fn();
@@ -32,7 +33,7 @@ describe("HistoryWorkspace", () => {
     page: 1,
     pageSize: 10,
     total: 1,
-    items: [{ id: "session-1", startedAt: "2026-10-12T08:00:00.000Z", endedAt: "2026-10-12T09:00:00.000Z", durationSeconds: 3600, categoryId: "coding", categoryName: "Lập trình" }],
+    items: [{ id: "session-1", startedAt: "2026-10-12T08:00:00.000Z", endedAt: "2026-10-12T09:00:00.000Z", durationSeconds: 3600, categoryId: "coding", categoryName: "Lập trình", note: "Đã giải hai bài thuật toán" }],
   };
 
   it("renders saved sessions and filters by category without using mock rows", () => {
@@ -47,11 +48,28 @@ describe("HistoryWorkspace", () => {
     expect(push).toHaveBeenCalledWith("/history?category=coding");
   });
 
-  it("opens the real edit form and keeps unsupported notes read-only", () => {
+  it("opens the real edit form with the saved note", () => {
     render(<HistoryWorkspace {...props} />);
     fireEvent.click(screen.getByRole("button", { name: /Chỉnh sửa phiên 12\/10\/2026/ }));
 
     expect(screen.getByRole("dialog", { name: "Chỉnh sửa phiên học" })).toBeDefined();
-    expect(screen.getByPlaceholderText("Chưa hỗ trợ lưu ghi chú").hasAttribute("disabled")).toBe(true);
+    expect(screen.getByPlaceholderText<HTMLTextAreaElement>("Ghi lại nội dung đã học…").value).toBe("Đã giải hai bài thuật toán");
+  });
+
+  it("saves a note without rounding the original session timestamps", async () => {
+    vi.mocked(updateSession).mockResolvedValue({ ok: true, data: {
+      startedAt: "2026-10-12T08:00:23.000Z",
+      endedAt: "2026-10-12T09:00:47.000Z",
+      durationSeconds: 3624,
+      note: "Ôn lại thuật toán",
+    } });
+    render(<HistoryWorkspace {...props} items={[{ ...props.items[0], startedAt: "2026-10-12T08:00:23.000Z", endedAt: "2026-10-12T09:00:47.000Z", durationSeconds: 3624 }]} />);
+    fireEvent.click(screen.getByRole("button", { name: /Chỉnh sửa phiên 12\/10\/2026/ }));
+    fireEvent.change(screen.getByPlaceholderText("Ghi lại nội dung đã học…"), { target: { value: "Ôn lại thuật toán" } });
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+
+    await waitFor(() => expect(updateSession).toHaveBeenCalledWith(
+      "session-1", "2026-10-12T08:00:23.000Z", "2026-10-12T09:00:47.000Z", "coding", "Ôn lại thuật toán",
+    ));
   });
 });

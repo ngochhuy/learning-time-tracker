@@ -36,6 +36,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
       durationSeconds: item.durationSeconds!,
       categoryId: item.categoryId,
       categoryName: item.category?.name ?? null,
+      note: item.note,
     }))}
   />;
 }
