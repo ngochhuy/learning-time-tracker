@@ -1,21 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Inter } from "next/font/google";
 import { ThemeToggle } from "@/components/theme-toggle";
+import "./fonts.css";
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin", "latin-ext", "vietnamese"],
-  display: "swap",
-  variable: "--font-inter",
-  fallback: ["Arial", "sans-serif"],
-});
-
-const geist = Geist({
-  subsets: ["latin", "latin-ext", "vietnamese"],
-  display: "swap",
-  variable: "--font-geist",
-  fallback: ["Arial", "sans-serif"],
-});
 
 export const metadata: Metadata = {
   title: {
@@ -31,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="vi" className={`${inter.variable} ${geist.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="vi" className="h-full antialiased" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: `try { const savedTheme = localStorage.getItem("focuslearn-theme"); const useDark = savedTheme ? savedTheme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches; document.documentElement.classList.toggle("dark", useDark); document.documentElement.style.colorScheme = useDark ? "dark" : "light"; } catch {}` }} />
       </head>
