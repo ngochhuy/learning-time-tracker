@@ -1,6 +1,9 @@
 import { db } from "@/lib/db";
 import { AppError } from "@/lib/errors";
 import { normalizeCategoryName } from "@/lib/utils";
+import { categoryColorKeys, type CategoryColorKey } from "@/lib/category-colors";
+
+export type { CategoryColorKey } from "@/lib/category-colors";
 
 function validateName(name: string) {
   const trimmed = name.trim().replace(/\s+/g, " ");
@@ -8,17 +11,14 @@ function validateName(name: string) {
   return { name: trimmed, normalizedName: normalizeCategoryName(trimmed) };
 }
 
-const colorKeys = ["matcha", "sage", "olive", "leaf", "tea"] as const;
-export type CategoryColorKey = (typeof colorKeys)[number] | `custom:#${string}`;
-
 function validateColorKey(value?: string): CategoryColorKey {
-  if (colorKeys.includes(value as (typeof colorKeys)[number])) return value as (typeof colorKeys)[number];
+  if (categoryColorKeys.includes(value as (typeof categoryColorKeys)[number])) return value as (typeof categoryColorKeys)[number];
   if (value && /^custom:#[0-9a-f]{6}$/i.test(value)) return value.toLowerCase() as CategoryColorKey;
   return "matcha";
 }
 
 export async function getCategories(userId: string) {
-  return db.category.findMany({ where: { userId }, orderBy: { name: "asc" }, select: { id: true, name: true } });
+  return db.category.findMany({ where: { userId }, orderBy: { name: "asc" }, select: { id: true, name: true, colorKey: true } });
 }
 
 export async function createCategory(userId: string, rawName: string, colorKey?: string) {

@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useRef, useState, useTransition } from "react";
 import { AlertTriangle, Check, ChevronRight, CirclePlus, Clock3, FolderCog, LockKeyhole, Palette, Pencil, Plus, ShieldCheck, Tag, TimerReset, Trash2 } from "lucide-react";
 import { addCategory, removeCategory, updateCategory } from "@/app/actions/categories";
-import type { CategoryColorKey } from "@/lib/category-service";
+import { categoryPalettes, getCategoryPalette, type CategoryColorKey } from "@/lib/category-colors";
 import { formatDuration } from "@/lib/utils";
 
 export type CategoryOverviewItem = {
@@ -21,22 +21,8 @@ type CategoryWorkspaceProps = {
   initialTotalSeconds: number;
 };
 
-type Palette = { key: CategoryColorKey; dot: string; bg: string; text: string; bar: string };
-const palettes: Palette[] = [
-  { key: "matcha", dot: "#2c4a32", bg: "#d8e8d6", text: "#223a27", bar: "#2c4a32" },
-  { key: "sage", dot: "#54735c", bg: "#dcedda", text: "#26442e", bar: "#54735c" },
-  { key: "olive", dot: "#735639", bg: "#ebd9c8", text: "#5b4028", bar: "#735639" },
-  { key: "leaf", dot: "#86af80", bg: "#eaf2e8", text: "#223a27", bar: "#86af80" },
-  { key: "tea", dot: "#a9c3a6", bg: "#e3ece1", text: "#304536", bar: "#a9c3a6" },
-];
-
-function paletteFor(key: CategoryColorKey): Palette {
-  if (key.startsWith("custom:#")) {
-    const color = key.slice("custom:".length);
-    return { key, dot: color, bg: `${color}26`, text: "#1b2e21", bar: color };
-  }
-  return palettes.find((palette) => palette.key === key) ?? palettes[0]!;
-}
+const palettes = Object.values(categoryPalettes);
+const paletteFor = getCategoryPalette;
 
 function lastUpdated(value: string | null) {
   if (!value) return "Chưa có phiên học";

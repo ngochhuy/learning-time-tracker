@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { AppError } from "@/lib/errors";
 import { runSerializable } from "@/lib/transactions";
 import { activeSessionInclude } from "@/lib/timer-service";
+import type { CategoryColorKey } from "@/lib/category-colors";
 
 export const preferenceFields = {
   focusMinutes: true,
@@ -23,10 +24,18 @@ export type PomodoroTaskData = Pick<Prisma.PomodoroTaskGetPayload<object>, "id" 
   plannedDate?: Date;
   categoryId?: string | null;
   archivedAt?: Date | null;
-  category?: { id: string; name: string } | null;
+  category?: { id: string; name: string; colorKey: CategoryColorKey } | null;
 };
 
-const taskFields = { id: true, title: true, estimate: true, completedPomodoros: true, done: true, plannedDate: true, categoryId: true, archivedAt: true, category: { select: { id: true, name: true } } } as const;
+const taskFields = { id: true, title: true, estimate: true, completedPomodoros: true, done: true, plannedDate: true, categoryId: true, archivedAt: true, category: { select: { id: true, name: true, colorKey: true } } } as const;
+type PomodoroTaskRecord = Prisma.PomodoroTaskGetPayload<{ select: typeof taskFields }>;
+
+function serializePomodoroTask(task: PomodoroTaskRecord): PomodoroTaskData {
+  return {
+    ...task,
+    category: task.category ? { ...task.category, colorKey: task.category.colorKey as CategoryColorKey } : null,
+  };
+}
 
 export async function getPomodoroData(userId: string, timezone: string, selectedDate?: string) {
   const day = selectedDate && /^\d{4}-\d{2}-\d{2}$/.test(selectedDate) ? selectedDate : DateTime.now().setZone(timezone).toISODate()!;
@@ -49,7 +58,7 @@ export async function getPomodoroData(userId: string, timezone: string, selected
   ]);
   const completedByTask = new Map<string, number>();
   for (const focus of selectedFocuses) if (focus.taskId) completedByTask.set(focus.taskId, (completedByTask.get(focus.taskId) ?? 0) + 1);
-  const tasksWithProgress = tasks.map((task) => ({ ...task, completedPomodoros: completedByTask.get(task.id) ?? 0 }));
+  const tasksWithProgress = tasks.map((task) => serializePomodoroTask({ ...task, completedPomodoros: completedByTask.get(task.id) ?? 0 }));
   const plannedPomodoros = tasksWithProgress.reduce((total, task) => total + task.estimate, 0);
   const completedPomodoros = tasksWithProgress.reduce((total, task) => total + task.completedPomodoros, 0);
   return {
@@ -69,7 +78,7 @@ export async function createPomodoroTask(userId: string, title: string, estimate
     const category = await db.category.findFirst({ where: { id: categoryId, userId }, select: { id: true } });
     if (!category) throw new AppError("CATEGORY_NOT_FOUND");
   }
-  return db.pomodoroTask.create({ data: { userId, title, estimate, plannedDate: planned, categoryId: categoryId ?? null }, select: taskFields });
+  return serializePomodoroTask(await db.pomodoroTask.create({ data: { userId, title, estimate, plannedDate: planned, categoryId: categoryId ?? null }, select: taskFields }));
 }
 
 export async function updatePomodoroTask(userId: string, taskId: string, data: { title?: string; estimate?: number; done?: boolean; plannedDate?: string; categoryId?: string | null }): Promise<PomodoroTaskData> {
@@ -82,7 +91,7 @@ export async function updatePomodoroTask(userId: string, taskId: string, data: {
   const { plannedDate, ...rest } = data;
   const result = await db.pomodoroTask.updateMany({ where: { id: taskId, userId, archivedAt: null }, data: { ...rest, ...(plannedDate ? { plannedDate: DateTime.fromISO(plannedDate, { zone: "utc" }).startOf("day").toJSDate() } : {}) } });
   if (!result.count) throw new AppError("POMODORO_TASK_NOT_FOUND");
-  return db.pomodoroTask.findUniqueOrThrow({ where: { id: taskId }, select: taskFields });
+  return serializePomodoroTask(await db.pomodoroTask.findUniqueOrThrow({ where: { id: taskId }, select: taskFields }));
 }
 
 export async function deletePomodoroTask(userId: string, taskId: string) {

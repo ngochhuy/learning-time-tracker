@@ -3,6 +3,7 @@ import { MatchaTimerWorkspace } from "@/components/matcha-timer-workspace";
 import { getCurrentUser } from "@/lib/current-user";
 import { getActiveSession } from "@/lib/timer-service";
 import { getCategories } from "@/lib/category-service";
+import type { CategoryColorKey } from "@/lib/category-colors";
 import { getTimerSummary } from "@/lib/dashboard-service";
 import { AppError } from "@/lib/errors";
 import { serializeTimerSession, type TimerSession } from "@/lib/timer-payload";
@@ -20,7 +21,7 @@ export default async function Home() {
 
   let session: TimerSession | null = null;
   let hasPomodoroSession = false;
-  let categories: Array<{ id: string; name: string }> = [];
+  let categories: Array<{ id: string; name: string; colorKey: CategoryColorKey }> = [];
   let timezone = "Asia/Bangkok";
   let dailyGoalMinutes = 120;
   let completedTodaySeconds = 0;
@@ -34,7 +35,7 @@ export default async function Home() {
     ]);
     hasPomodoroSession = Boolean(active?.pomodoroFocus);
     session = active && !active.pomodoroFocus ? serializeTimerSession(active) : null;
-    categories = userCategories.map(({ id, name }) => ({ id, name }));
+    categories = userCategories.map(({ id, name, colorKey }) => ({ id, name, colorKey: colorKey as CategoryColorKey }));
     timezone = timerSummary.timezone;
     dailyGoalMinutes = timerSummary.dailyGoalMinutes;
     completedTodaySeconds = timerSummary.todaySeconds;

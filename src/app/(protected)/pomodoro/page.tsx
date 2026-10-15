@@ -8,6 +8,7 @@ import { AppError } from "@/lib/errors";
 import { serializeTimerSession, type TimerSession } from "@/lib/timer-payload";
 import { getActiveSession } from "@/lib/timer-service";
 import { getCategories } from "@/lib/category-service";
+import type { CategoryColorKey } from "@/lib/category-colors";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +32,7 @@ export default async function PomodoroPage({ searchParams }: { searchParams?: Pr
   let databaseUnavailable = false;
   let pomodoroData: Awaited<ReturnType<typeof getPomodoroData>> | null = null;
   let hasTimerSession = false;
-  let categories: Array<{ id: string; name: string }> = [];
+  let categories: Array<{ id: string; name: string; colorKey: CategoryColorKey }> = [];
   const params = searchParams ? await searchParams : {};
   const rawDate = params.date;
   const selectedDate = typeof rawDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : undefined;
@@ -42,7 +43,7 @@ export default async function PomodoroPage({ searchParams }: { searchParams?: Pr
       getTimerSummary(user.id),
       getCategories(user.id),
     ]);
-    categories = userCategories.map(({ id, name }) => ({ id, name }));
+    categories = userCategories.map(({ id, name, colorKey }) => ({ id, name, colorKey: colorKey as CategoryColorKey }));
     hasTimerSession = Boolean(active && !active.pomodoroFocus);
     session = active?.pomodoroFocus ? serializeTimerSession(active) : null;
     dailyGoalMinutes = summary.dailyGoalMinutes;
