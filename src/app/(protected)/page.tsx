@@ -19,6 +19,7 @@ export default async function Home() {
   }
 
   let session: TimerSession | null = null;
+  let hasPomodoroSession = false;
   let categories: Array<{ id: string; name: string }> = [];
   let timezone = "Asia/Bangkok";
   let dailyGoalMinutes = 120;
@@ -31,7 +32,8 @@ export default async function Home() {
       getCategories(user.id),
       getTimerSummary(user.id),
     ]);
-    session = active ? serializeTimerSession(active) : null;
+    hasPomodoroSession = Boolean(active?.pomodoroFocus);
+    session = active && !active.pomodoroFocus ? serializeTimerSession(active) : null;
     categories = userCategories.map(({ id, name }) => ({ id, name }));
     timezone = timerSummary.timezone;
     dailyGoalMinutes = timerSummary.dailyGoalMinutes;
@@ -40,5 +42,5 @@ export default async function Home() {
     databaseUnavailable = true;
   }
 
-  return <MatchaTimerWorkspace session={session} categories={categories} timezone={timezone} dailyGoalMinutes={dailyGoalMinutes} completedTodaySeconds={completedTodaySeconds} databaseUnavailable={databaseUnavailable} />;
+  return <MatchaTimerWorkspace session={session} hasPomodoroSession={hasPomodoroSession} categories={categories} timezone={timezone} dailyGoalMinutes={dailyGoalMinutes} completedTodaySeconds={completedTodaySeconds} databaseUnavailable={databaseUnavailable} />;
 }

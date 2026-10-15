@@ -10,6 +10,7 @@ import { normalizeSessionNote } from "@/lib/session-note";
 const completedInclude = {
   category: { select: { id: true, name: true } },
   intervals: { orderBy: { startedAt: "asc" } },
+  pomodoroFocus: { select: { targetSeconds: true, completedAt: true, taskId: true, task: { select: { id: true, title: true } } } },
 } satisfies Prisma.LearningSessionInclude;
 
 export type HistoryFilters = { categoryId?: string; uncategorized?: boolean; from?: Date; to?: Date; query?: string; page?: number; pageSize?: number };
@@ -100,7 +101,7 @@ export async function updateCompletedSession(
   return runSerializable(async (tx) => {
     const session = await tx.learningSession.findFirst({
       where: { id: sessionId, userId, status: LearningStatus.COMPLETED },
-      include: { intervals: { orderBy: { startedAt: "asc" } } },
+      include: { intervals: { orderBy: { startedAt: "asc" } }, pomodoroFocus: { select: { targetSeconds: true, completedAt: true, taskId: true, task: { select: { id: true, title: true } } } } },
     });
     if (!session) throw new AppError("SESSION_NOT_FOUND");
     const conflict = await tx.learningSession.findFirst({
@@ -115,6 +116,9 @@ export async function updateCompletedSession(
     }
     const durationSeconds = sumIntervalSeconds(revised);
     if (durationSeconds < 1) throw new AppError("INVALID_TIME_RANGE");
+    if (session.pomodoroFocus) {
+      await tx.pomodoroFocus.update({ where: { sessionId }, data: { completedAt: durationSeconds >= session.pomodoroFocus.targetSeconds ? endedAt : null } });
+    }
     return tx.learningSession.update({
       where: { id: sessionId },
       data: { startedAt, endedAt, categoryId: validCategoryId, durationSeconds, ...(normalizedNote === undefined ? {} : { note: normalizedNote }) },
@@ -126,4 +130,9 @@ export async function updateCompletedSession(
 export async function deleteCompletedSession(userId: string, sessionId: string) {
   const result = await db.learningSession.deleteMany({ where: { id: sessionId, userId, status: LearningStatus.COMPLETED } });
   if (result.count !== 1) throw new AppError("SESSION_NOT_FOUND");
+}
+
+/** Permanently removes completed learning sessions for one user. */
+export async function deleteAllCompletedSessions(userId: string) {
+  return db.learningSession.deleteMany({ where: { userId, status: LearningStatus.COMPLETED } });
 }

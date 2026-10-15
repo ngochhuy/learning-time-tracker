@@ -6,14 +6,22 @@ import { runSerializable } from "@/lib/transactions";
 import { db } from "@/lib/db";
 import { normalizeSessionNote } from "@/lib/session-note";
 
-const activeSessionInclude = {
+export const activeSessionInclude = {
   intervals: { orderBy: { startedAt: "asc" } },
   category: { select: { id: true, name: true } },
+  pomodoroFocus: { select: { targetSeconds: true, taskId: true } },
 } satisfies Prisma.LearningSessionInclude;
 
 export type ActiveSession = Prisma.LearningSessionGetPayload<{
   include: typeof activeSessionInclude;
 }>;
+
+export type SessionKind = "timer" | "pomodoro";
+
+function assertSessionKind(session: ActiveSession, expected: SessionKind) {
+  const actual: SessionKind = session.pomodoroFocus ? "pomodoro" : "timer";
+  if (actual !== expected) throw new AppError("INVALID_SESSION_KIND");
+}
 
 async function getOwnedSession(
   tx: Prisma.TransactionClient,
@@ -47,7 +55,7 @@ export async function getActiveSession(userId: string): Promise<ActiveSession | 
   });
 }
 
-export async function startLearningSession(userId: string, categoryId: string | null, clickedAt: string, note?: string | null) {
+export async function startLearningSession(userId: string, categoryId: string | null, clickedAt: string, note?: string | null, pomodoro?: { targetSeconds: number; taskId: string | null; categoryId?: string | null }) {
   const normalizedNote = normalizeSessionNote(note);
   try {
     return await runSerializable(async (tx) => {
@@ -58,11 +66,21 @@ export async function startLearningSession(userId: string, categoryId: string | 
       });
       if (active) throw new AppError("ACTIVE_SESSION_EXISTS");
 
+      let sessionCategoryId = categoryId;
+      if (pomodoro?.taskId) {
+        const task = await tx.pomodoroTask.findFirst({ where: { id: pomodoro.taskId, userId, archivedAt: null }, select: { id: true, categoryId: true, title: true } });
+        if (!task) throw new AppError("POMODORO_TASK_NOT_FOUND");
+        sessionCategoryId = pomodoro.categoryId === undefined ? task.categoryId : pomodoro.categoryId;
+      }
+      if (pomodoro && pomodoro.categoryId !== undefined) {
+        await verifyCategory(tx, userId, pomodoro.categoryId);
+      }
+
       const now = validateStartTimestamp(clickedAt, new Date());
-      return tx.learningSession.create({
+      const session = await tx.learningSession.create({
         data: {
           userId,
-          categoryId: categoryId ?? null,
+          categoryId: sessionCategoryId ?? null,
           note: normalizedNote,
           status: LearningStatus.RUNNING,
           startedAt: now,
@@ -70,6 +88,11 @@ export async function startLearningSession(userId: string, categoryId: string | 
         },
         include: activeSessionInclude,
       });
+      if (pomodoro) {
+        await tx.pomodoroFocus.create({ data: { userId, sessionId: session.id, taskId: pomodoro.taskId, targetSeconds: pomodoro.targetSeconds } });
+        return tx.learningSession.findUniqueOrThrow({ where: { id: session.id }, include: activeSessionInclude });
+      }
+      return session;
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
@@ -79,9 +102,10 @@ export async function startLearningSession(userId: string, categoryId: string | 
   }
 }
 
-export async function pauseLearningSession(userId: string, sessionId: string, clickedAt: string) {
+export async function pauseLearningSession(userId: string, sessionId: string, clickedAt: string, kind: SessionKind = "timer") {
   return runSerializable(async (tx) => {
     const session = await getOwnedSession(tx, userId, sessionId);
+    assertSessionKind(session, kind);
     if (session.status !== LearningStatus.RUNNING) throw new AppError("INVALID_SESSION_STATE");
 
     const openInterval = session.intervals.find((interval) => !interval.endedAt);
@@ -97,9 +121,10 @@ export async function pauseLearningSession(userId: string, sessionId: string, cl
   });
 }
 
-export async function resumeLearningSession(userId: string, sessionId: string) {
+export async function resumeLearningSession(userId: string, sessionId: string, kind: SessionKind = "timer") {
   return runSerializable(async (tx) => {
     const session = await getOwnedSession(tx, userId, sessionId);
+    assertSessionKind(session, kind);
     if (session.status !== LearningStatus.PAUSED) throw new AppError("INVALID_SESSION_STATE");
     if (session.intervals.some((interval) => !interval.endedAt)) {
       throw new AppError("INVALID_SESSION_STATE");
@@ -117,10 +142,11 @@ export async function resumeLearningSession(userId: string, sessionId: string) {
   });
 }
 
-export async function finishLearningSession(userId: string, sessionId: string, note?: string | null) {
+export async function finishLearningSession(userId: string, sessionId: string, note?: string | null, completePomodoro = false, kind: SessionKind = completePomodoro ? "pomodoro" : "timer") {
   const normalizedNote = note === undefined ? undefined : normalizeSessionNote(note);
   return runSerializable(async (tx) => {
     const session = await getOwnedSession(tx, userId, sessionId);
+    assertSessionKind(session, kind);
     if (session.status !== LearningStatus.RUNNING && session.status !== LearningStatus.PAUSED) {
       throw new AppError("INVALID_SESSION_STATE");
     }
@@ -128,7 +154,11 @@ export async function finishLearningSession(userId: string, sessionId: string, n
     const now = new Date();
     const openInterval = session.intervals.find((interval) => !interval.endedAt);
     if (openInterval) {
-      await tx.sessionInterval.update({ where: { id: openInterval.id }, data: { endedAt: now } });
+      const closedSeconds = getClosedDurationSeconds(session.intervals);
+      const targetEndAt = completePomodoro && session.pomodoroFocus && closedSeconds < session.pomodoroFocus.targetSeconds
+        ? new Date(Math.min(now.getTime(), openInterval.startedAt.getTime() + (session.pomodoroFocus.targetSeconds - closedSeconds) * 1_000))
+        : now;
+      await tx.sessionInterval.update({ where: { id: openInterval.id }, data: { endedAt: targetEndAt } });
     }
 
     const intervals = await tx.sessionInterval.findMany({
@@ -137,19 +167,32 @@ export async function finishLearningSession(userId: string, sessionId: string, n
     });
     const durationSeconds = getClosedDurationSeconds(intervals);
     if (durationSeconds < 1) throw new AppError("INVALID_TIME_RANGE");
+    if (completePomodoro && (!session.pomodoroFocus || durationSeconds < session.pomodoroFocus.targetSeconds - 1)) {
+      throw new AppError("POMODORO_NOT_READY");
+    }
 
-    return tx.learningSession.update({
+    const completed = await tx.learningSession.update({
       where: { id: session.id },
       data: { status: LearningStatus.COMPLETED, endedAt: now, durationSeconds, ...(normalizedNote === undefined ? {} : { note: normalizedNote }) },
       include: activeSessionInclude,
     });
+    if (completePomodoro && session.pomodoroFocus) {
+      await tx.pomodoroFocus.update({ where: { sessionId }, data: { completedAt: now } });
+      // Completion is derived from PomodoroFocus.completedAt. The legacy counter
+      // remains untouched so old records stay compatible.
+      if (session.pomodoroFocus.taskId) {
+        await tx.pomodoroTask.update({ where: { id: session.pomodoroFocus.taskId }, data: { completedPomodoros: { increment: 1 } } });
+      }
+    }
+    return completed;
   });
 }
 
-export async function saveActiveSessionNote(userId: string, sessionId: string, note: string | null) {
+export async function saveActiveSessionNote(userId: string, sessionId: string, note: string | null, kind: SessionKind = "timer") {
   const normalizedNote = normalizeSessionNote(note);
   return runSerializable(async (tx) => {
     const session = await getOwnedSession(tx, userId, sessionId);
+    assertSessionKind(session, kind);
     if (session.status !== LearningStatus.RUNNING && session.status !== LearningStatus.PAUSED) {
       throw new AppError("INVALID_SESSION_STATE");
     }
@@ -157,9 +200,10 @@ export async function saveActiveSessionNote(userId: string, sessionId: string, n
   });
 }
 
-export async function cancelLearningSession(userId: string, sessionId: string) {
+export async function cancelLearningSession(userId: string, sessionId: string, kind: SessionKind = "timer") {
   return runSerializable(async (tx) => {
     const session = await getOwnedSession(tx, userId, sessionId);
+    assertSessionKind(session, kind);
     if (session.status !== LearningStatus.RUNNING && session.status !== LearningStatus.PAUSED) {
       throw new AppError("INVALID_SESSION_STATE");
     }
@@ -171,9 +215,11 @@ export async function changeActiveSessionCategory(
   userId: string,
   sessionId: string,
   categoryId?: string | null,
+  kind: SessionKind = "timer",
 ) {
   return runSerializable(async (tx) => {
     const session = await getOwnedSession(tx, userId, sessionId);
+    assertSessionKind(session, kind);
     if (session.status !== LearningStatus.RUNNING && session.status !== LearningStatus.PAUSED) {
       throw new AppError("INVALID_SESSION_STATE");
     }

@@ -20,6 +20,7 @@ const sessionIdSchema = z.string().min(1);
 
 function refreshCompletedSessionViews() {
   revalidatePath("/");
+  revalidatePath("/pomodoro");
   revalidatePath("/dashboard");
   revalidatePath("/categories");
   revalidatePath("/history");
@@ -38,7 +39,7 @@ export async function startSession(categoryId: string | null, clickedAt: string,
 export async function pauseSession(sessionId: string, clickedAt: string): Promise<ActionResult<TimerSession>> {
   try {
     const user = await getCurrentUser();
-    const session = await pauseLearningSession(user.id, sessionIdSchema.parse(sessionId), clickedAt);
+    const session = await pauseLearningSession(user.id, sessionIdSchema.parse(sessionId), clickedAt, "timer");
     return { ok: true, data: serializeTimerSession(session) };
   } catch (error) {
     return toActionError(error);
@@ -48,7 +49,7 @@ export async function pauseSession(sessionId: string, clickedAt: string): Promis
 export async function resumeSession(sessionId: string): Promise<ActionResult<TimerSession>> {
   try {
     const user = await getCurrentUser();
-    const session = await resumeLearningSession(user.id, sessionIdSchema.parse(sessionId));
+    const session = await resumeLearningSession(user.id, sessionIdSchema.parse(sessionId), "timer");
     return { ok: true, data: serializeTimerSession(session) };
   } catch (error) {
     return toActionError(error);
@@ -58,7 +59,7 @@ export async function resumeSession(sessionId: string): Promise<ActionResult<Tim
 export async function finishSession(sessionId: string, note?: string | null): Promise<ActionResult<{ id: string }>> {
   try {
     const user = await getCurrentUser();
-    const session = await finishLearningSession(user.id, sessionIdSchema.parse(sessionId), note);
+    const session = await finishLearningSession(user.id, sessionIdSchema.parse(sessionId), note, false, "timer");
     refreshCompletedSessionViews();
     return { ok: true, data: { id: session.id } };
   } catch (error) {
@@ -69,7 +70,7 @@ export async function finishSession(sessionId: string, note?: string | null): Pr
 export async function saveSessionNote(sessionId: string, note: string | null): Promise<ActionResult<TimerSession>> {
   try {
     const user = await getCurrentUser();
-    const session = await saveActiveSessionNote(user.id, sessionIdSchema.parse(sessionId), note);
+    const session = await saveActiveSessionNote(user.id, sessionIdSchema.parse(sessionId), note, "timer");
     return { ok: true, data: serializeTimerSession(session) };
   } catch (error) {
     return toActionError(error);
@@ -79,7 +80,7 @@ export async function saveSessionNote(sessionId: string, note: string | null): P
 export async function cancelSession(sessionId: string): Promise<ActionResult> {
   try {
     const user = await getCurrentUser();
-    await cancelLearningSession(user.id, sessionIdSchema.parse(sessionId));
+    await cancelLearningSession(user.id, sessionIdSchema.parse(sessionId), "timer");
     return { ok: true, data: undefined };
   } catch (error) {
     return toActionError(error);
@@ -96,6 +97,7 @@ export async function changeSessionCategory(
       user.id,
       sessionIdSchema.parse(sessionId),
       optionalId.parse(categoryId),
+      "timer",
     );
     return { ok: true, data: serializeTimerSession(session) };
   } catch (error) {

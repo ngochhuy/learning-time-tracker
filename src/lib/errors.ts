@@ -1,7 +1,10 @@
 import { logger } from "@/lib/logger";
 
 export const errorMessages = {
+  POMODORO_TASK_NOT_FOUND: "Không tìm thấy nhiệm vụ Pomodoro của bạn.",
+  POMODORO_NOT_READY: "Phiên Pomodoro chưa đủ thời lượng để tính hoàn thành.",
   ACTIVE_SESSION_EXISTS: "Bạn đang có một phiên học khác.",
+  INVALID_SESSION_KIND: "Phiên học thuộc chế độ khác. Hãy thao tác tại đúng trang.",
   SESSION_NOT_FOUND: "Không tìm thấy phiên học.",
   INVALID_SESSION_STATE: "Trạng thái phiên học không còn phù hợp.",
   CATEGORY_NOT_FOUND: "Không tìm thấy danh mục.",

@@ -58,7 +58,10 @@ export const ModelName = {
   UserSettings: 'UserSettings',
   Category: 'Category',
   LearningSession: 'LearningSession',
-  SessionInterval: 'SessionInterval'
+  SessionInterval: 'SessionInterval',
+  PomodoroTask: 'PomodoroTask',
+  PomodoroPreferences: 'PomodoroPreferences',
+  PomodoroFocus: 'PomodoroFocus'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -186,6 +189,56 @@ export const SessionIntervalScalarFieldEnum = {
 } as const
 
 export type SessionIntervalScalarFieldEnum = (typeof SessionIntervalScalarFieldEnum)[keyof typeof SessionIntervalScalarFieldEnum]
+
+
+export const PomodoroTaskScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  plannedDate: 'plannedDate',
+  categoryId: 'categoryId',
+  estimate: 'estimate',
+  completedPomodoros: 'completedPomodoros',
+  done: 'done',
+  archivedAt: 'archivedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PomodoroTaskScalarFieldEnum = (typeof PomodoroTaskScalarFieldEnum)[keyof typeof PomodoroTaskScalarFieldEnum]
+
+
+export const PomodoroPreferencesScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  focusMinutes: 'focusMinutes',
+  shortBreakMinutes: 'shortBreakMinutes',
+  longBreakMinutes: 'longBreakMinutes',
+  customMinutes: 'customMinutes',
+  cyclesBeforeLongBreak: 'cyclesBeforeLongBreak',
+  autoStartBreak: 'autoStartBreak',
+  autoStartFocus: 'autoStartFocus',
+  sound: 'sound',
+  volume: 'volume',
+  chime: 'chime',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PomodoroPreferencesScalarFieldEnum = (typeof PomodoroPreferencesScalarFieldEnum)[keyof typeof PomodoroPreferencesScalarFieldEnum]
+
+
+export const PomodoroFocusScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  sessionId: 'sessionId',
+  taskId: 'taskId',
+  targetSeconds: 'targetSeconds',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type PomodoroFocusScalarFieldEnum = (typeof PomodoroFocusScalarFieldEnum)[keyof typeof PomodoroFocusScalarFieldEnum]
 
 
 export const SortOrder = {

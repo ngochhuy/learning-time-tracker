@@ -200,6 +200,7 @@ export type CategoryWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Category"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   sessions?: Prisma.LearningSessionListRelationFilter
+  pomodoroTasks?: Prisma.PomodoroTaskListRelationFilter
 }
 
 export type CategoryOrderByWithRelationInput = {
@@ -212,6 +213,7 @@ export type CategoryOrderByWithRelationInput = {
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   sessions?: Prisma.LearningSessionOrderByRelationAggregateInput
+  pomodoroTasks?: Prisma.PomodoroTaskOrderByRelationAggregateInput
 }
 
 export type CategoryWhereUniqueInput = Prisma.AtLeast<{
@@ -228,6 +230,7 @@ export type CategoryWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"Category"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   sessions?: Prisma.LearningSessionListRelationFilter
+  pomodoroTasks?: Prisma.PomodoroTaskListRelationFilter
 }, "id" | "userId_normalizedName">
 
 export type CategoryOrderByWithAggregationInput = {
@@ -265,6 +268,7 @@ export type CategoryCreateInput = {
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutCategoriesInput
   sessions?: Prisma.LearningSessionCreateNestedManyWithoutCategoryInput
+  pomodoroTasks?: Prisma.PomodoroTaskCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryUncheckedCreateInput = {
@@ -276,6 +280,7 @@ export type CategoryUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutCategoryInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryUpdateInput = {
@@ -287,6 +292,7 @@ export type CategoryUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutCategoriesNestedInput
   sessions?: Prisma.LearningSessionUpdateManyWithoutCategoryNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryUncheckedUpdateInput = {
@@ -298,6 +304,7 @@ export type CategoryUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutCategoryNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryCreateManyInput = {
@@ -437,6 +444,22 @@ export type CategoryUpdateOneWithoutSessionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.CategoryUpdateToOneWithWhereWithoutSessionsInput, Prisma.CategoryUpdateWithoutSessionsInput>, Prisma.CategoryUncheckedUpdateWithoutSessionsInput>
 }
 
+export type CategoryCreateNestedOneWithoutPomodoroTasksInput = {
+  create?: Prisma.XOR<Prisma.CategoryCreateWithoutPomodoroTasksInput, Prisma.CategoryUncheckedCreateWithoutPomodoroTasksInput>
+  connectOrCreate?: Prisma.CategoryCreateOrConnectWithoutPomodoroTasksInput
+  connect?: Prisma.CategoryWhereUniqueInput
+}
+
+export type CategoryUpdateOneWithoutPomodoroTasksNestedInput = {
+  create?: Prisma.XOR<Prisma.CategoryCreateWithoutPomodoroTasksInput, Prisma.CategoryUncheckedCreateWithoutPomodoroTasksInput>
+  connectOrCreate?: Prisma.CategoryCreateOrConnectWithoutPomodoroTasksInput
+  upsert?: Prisma.CategoryUpsertWithoutPomodoroTasksInput
+  disconnect?: Prisma.CategoryWhereInput | boolean
+  delete?: Prisma.CategoryWhereInput | boolean
+  connect?: Prisma.CategoryWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CategoryUpdateToOneWithWhereWithoutPomodoroTasksInput, Prisma.CategoryUpdateWithoutPomodoroTasksInput>, Prisma.CategoryUncheckedUpdateWithoutPomodoroTasksInput>
+}
+
 export type CategoryCreateWithoutUserInput = {
   id?: string
   name: string
@@ -445,6 +468,7 @@ export type CategoryCreateWithoutUserInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.LearningSessionCreateNestedManyWithoutCategoryInput
+  pomodoroTasks?: Prisma.PomodoroTaskCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryUncheckedCreateWithoutUserInput = {
@@ -455,6 +479,7 @@ export type CategoryUncheckedCreateWithoutUserInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   sessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutCategoryInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryCreateOrConnectWithoutUserInput = {
@@ -504,6 +529,7 @@ export type CategoryCreateWithoutSessionsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutCategoriesInput
+  pomodoroTasks?: Prisma.PomodoroTaskCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryUncheckedCreateWithoutSessionsInput = {
@@ -514,6 +540,7 @@ export type CategoryUncheckedCreateWithoutSessionsInput = {
   colorKey?: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedCreateNestedManyWithoutCategoryInput
 }
 
 export type CategoryCreateOrConnectWithoutSessionsInput = {
@@ -540,6 +567,7 @@ export type CategoryUpdateWithoutSessionsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutCategoriesNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryUncheckedUpdateWithoutSessionsInput = {
@@ -550,6 +578,67 @@ export type CategoryUncheckedUpdateWithoutSessionsInput = {
   colorKey?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedUpdateManyWithoutCategoryNestedInput
+}
+
+export type CategoryCreateWithoutPomodoroTasksInput = {
+  id?: string
+  name: string
+  normalizedName: string
+  colorKey?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutCategoriesInput
+  sessions?: Prisma.LearningSessionCreateNestedManyWithoutCategoryInput
+}
+
+export type CategoryUncheckedCreateWithoutPomodoroTasksInput = {
+  id?: string
+  userId: string
+  name: string
+  normalizedName: string
+  colorKey?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutCategoryInput
+}
+
+export type CategoryCreateOrConnectWithoutPomodoroTasksInput = {
+  where: Prisma.CategoryWhereUniqueInput
+  create: Prisma.XOR<Prisma.CategoryCreateWithoutPomodoroTasksInput, Prisma.CategoryUncheckedCreateWithoutPomodoroTasksInput>
+}
+
+export type CategoryUpsertWithoutPomodoroTasksInput = {
+  update: Prisma.XOR<Prisma.CategoryUpdateWithoutPomodoroTasksInput, Prisma.CategoryUncheckedUpdateWithoutPomodoroTasksInput>
+  create: Prisma.XOR<Prisma.CategoryCreateWithoutPomodoroTasksInput, Prisma.CategoryUncheckedCreateWithoutPomodoroTasksInput>
+  where?: Prisma.CategoryWhereInput
+}
+
+export type CategoryUpdateToOneWithWhereWithoutPomodoroTasksInput = {
+  where?: Prisma.CategoryWhereInput
+  data: Prisma.XOR<Prisma.CategoryUpdateWithoutPomodoroTasksInput, Prisma.CategoryUncheckedUpdateWithoutPomodoroTasksInput>
+}
+
+export type CategoryUpdateWithoutPomodoroTasksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  colorKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutCategoriesNestedInput
+  sessions?: Prisma.LearningSessionUpdateManyWithoutCategoryNestedInput
+}
+
+export type CategoryUncheckedUpdateWithoutPomodoroTasksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedName?: Prisma.StringFieldUpdateOperationsInput | string
+  colorKey?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryCreateManyUserInput = {
@@ -569,6 +658,7 @@ export type CategoryUpdateWithoutUserInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.LearningSessionUpdateManyWithoutCategoryNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryUncheckedUpdateWithoutUserInput = {
@@ -579,6 +669,7 @@ export type CategoryUncheckedUpdateWithoutUserInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   sessions?: Prisma.LearningSessionUncheckedUpdateManyWithoutCategoryNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedUpdateManyWithoutCategoryNestedInput
 }
 
 export type CategoryUncheckedUpdateManyWithoutUserInput = {
@@ -597,10 +688,12 @@ export type CategoryUncheckedUpdateManyWithoutUserInput = {
 
 export type CategoryCountOutputType = {
   sessions: number
+  pomodoroTasks: number
 }
 
 export type CategoryCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sessions?: boolean | CategoryCountOutputTypeCountSessionsArgs
+  pomodoroTasks?: boolean | CategoryCountOutputTypeCountPomodoroTasksArgs
 }
 
 /**
@@ -620,6 +713,13 @@ export type CategoryCountOutputTypeCountSessionsArgs<ExtArgs extends runtime.Typ
   where?: Prisma.LearningSessionWhereInput
 }
 
+/**
+ * CategoryCountOutputType without action
+ */
+export type CategoryCountOutputTypeCountPomodoroTasksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PomodoroTaskWhereInput
+}
+
 
 export type CategorySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -631,6 +731,7 @@ export type CategorySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   sessions?: boolean | Prisma.Category$sessionsArgs<ExtArgs>
+  pomodoroTasks?: boolean | Prisma.Category$pomodoroTasksArgs<ExtArgs>
   _count?: boolean | Prisma.CategoryCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["category"]>
 
@@ -670,6 +771,7 @@ export type CategoryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs =
 export type CategoryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   sessions?: boolean | Prisma.Category$sessionsArgs<ExtArgs>
+  pomodoroTasks?: boolean | Prisma.Category$pomodoroTasksArgs<ExtArgs>
   _count?: boolean | Prisma.CategoryCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type CategoryIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -684,6 +786,7 @@ export type $CategoryPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   objects: {
     user: Prisma.$UserPayload<ExtArgs>
     sessions: Prisma.$LearningSessionPayload<ExtArgs>[]
+    pomodoroTasks: Prisma.$PomodoroTaskPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1089,6 +1192,7 @@ export interface Prisma__CategoryClient<T, Null = never, ExtArgs extends runtime
   readonly [Symbol.toStringTag]: "PrismaPromise"
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   sessions<T extends Prisma.Category$sessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Category$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LearningSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  pomodoroTasks<T extends Prisma.Category$pomodoroTasksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Category$pomodoroTasksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PomodoroTaskPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1547,6 +1651,30 @@ export type Category$sessionsArgs<ExtArgs extends runtime.Types.Extensions.Inter
   take?: number
   skip?: number
   distinct?: Prisma.LearningSessionScalarFieldEnum | Prisma.LearningSessionScalarFieldEnum[]
+}
+
+/**
+ * Category.pomodoroTasks
+ */
+export type Category$pomodoroTasksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PomodoroTask
+   */
+  select?: Prisma.PomodoroTaskSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PomodoroTask
+   */
+  omit?: Prisma.PomodoroTaskOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PomodoroTaskInclude<ExtArgs> | null
+  where?: Prisma.PomodoroTaskWhereInput
+  orderBy?: Prisma.PomodoroTaskOrderByWithRelationInput | Prisma.PomodoroTaskOrderByWithRelationInput[]
+  cursor?: Prisma.PomodoroTaskWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PomodoroTaskScalarFieldEnum | Prisma.PomodoroTaskScalarFieldEnum[]
 }
 
 /**

@@ -259,6 +259,7 @@ export type LearningSessionWhereInput = {
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   category?: Prisma.XOR<Prisma.CategoryNullableScalarRelationFilter, Prisma.CategoryWhereInput> | null
   intervals?: Prisma.SessionIntervalListRelationFilter
+  pomodoroFocus?: Prisma.XOR<Prisma.PomodoroFocusNullableScalarRelationFilter, Prisma.PomodoroFocusWhereInput> | null
 }
 
 export type LearningSessionOrderByWithRelationInput = {
@@ -275,6 +276,7 @@ export type LearningSessionOrderByWithRelationInput = {
   user?: Prisma.UserOrderByWithRelationInput
   category?: Prisma.CategoryOrderByWithRelationInput
   intervals?: Prisma.SessionIntervalOrderByRelationAggregateInput
+  pomodoroFocus?: Prisma.PomodoroFocusOrderByWithRelationInput
 }
 
 export type LearningSessionWhereUniqueInput = Prisma.AtLeast<{
@@ -294,6 +296,7 @@ export type LearningSessionWhereUniqueInput = Prisma.AtLeast<{
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   category?: Prisma.XOR<Prisma.CategoryNullableScalarRelationFilter, Prisma.CategoryWhereInput> | null
   intervals?: Prisma.SessionIntervalListRelationFilter
+  pomodoroFocus?: Prisma.XOR<Prisma.PomodoroFocusNullableScalarRelationFilter, Prisma.PomodoroFocusWhereInput> | null
 }, "id">
 
 export type LearningSessionOrderByWithAggregationInput = {
@@ -342,6 +345,7 @@ export type LearningSessionCreateInput = {
   user: Prisma.UserCreateNestedOneWithoutLearningInput
   category?: Prisma.CategoryCreateNestedOneWithoutSessionsInput
   intervals?: Prisma.SessionIntervalCreateNestedManyWithoutSessionInput
+  pomodoroFocus?: Prisma.PomodoroFocusCreateNestedOneWithoutSessionInput
 }
 
 export type LearningSessionUncheckedCreateInput = {
@@ -356,6 +360,7 @@ export type LearningSessionUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   intervals?: Prisma.SessionIntervalUncheckedCreateNestedManyWithoutSessionInput
+  pomodoroFocus?: Prisma.PomodoroFocusUncheckedCreateNestedOneWithoutSessionInput
 }
 
 export type LearningSessionUpdateInput = {
@@ -370,6 +375,7 @@ export type LearningSessionUpdateInput = {
   user?: Prisma.UserUpdateOneRequiredWithoutLearningNestedInput
   category?: Prisma.CategoryUpdateOneWithoutSessionsNestedInput
   intervals?: Prisma.SessionIntervalUpdateManyWithoutSessionNestedInput
+  pomodoroFocus?: Prisma.PomodoroFocusUpdateOneWithoutSessionNestedInput
 }
 
 export type LearningSessionUncheckedUpdateInput = {
@@ -384,6 +390,7 @@ export type LearningSessionUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   intervals?: Prisma.SessionIntervalUncheckedUpdateManyWithoutSessionNestedInput
+  pomodoroFocus?: Prisma.PomodoroFocusUncheckedUpdateOneWithoutSessionNestedInput
 }
 
 export type LearningSessionCreateManyInput = {
@@ -595,6 +602,20 @@ export type LearningSessionUpdateOneRequiredWithoutIntervalsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.LearningSessionUpdateToOneWithWhereWithoutIntervalsInput, Prisma.LearningSessionUpdateWithoutIntervalsInput>, Prisma.LearningSessionUncheckedUpdateWithoutIntervalsInput>
 }
 
+export type LearningSessionCreateNestedOneWithoutPomodoroFocusInput = {
+  create?: Prisma.XOR<Prisma.LearningSessionCreateWithoutPomodoroFocusInput, Prisma.LearningSessionUncheckedCreateWithoutPomodoroFocusInput>
+  connectOrCreate?: Prisma.LearningSessionCreateOrConnectWithoutPomodoroFocusInput
+  connect?: Prisma.LearningSessionWhereUniqueInput
+}
+
+export type LearningSessionUpdateOneRequiredWithoutPomodoroFocusNestedInput = {
+  create?: Prisma.XOR<Prisma.LearningSessionCreateWithoutPomodoroFocusInput, Prisma.LearningSessionUncheckedCreateWithoutPomodoroFocusInput>
+  connectOrCreate?: Prisma.LearningSessionCreateOrConnectWithoutPomodoroFocusInput
+  upsert?: Prisma.LearningSessionUpsertWithoutPomodoroFocusInput
+  connect?: Prisma.LearningSessionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.LearningSessionUpdateToOneWithWhereWithoutPomodoroFocusInput, Prisma.LearningSessionUpdateWithoutPomodoroFocusInput>, Prisma.LearningSessionUncheckedUpdateWithoutPomodoroFocusInput>
+}
+
 export type LearningSessionCreateWithoutUserInput = {
   id?: string
   status: $Enums.LearningStatus
@@ -606,6 +627,7 @@ export type LearningSessionCreateWithoutUserInput = {
   updatedAt?: Date | string
   category?: Prisma.CategoryCreateNestedOneWithoutSessionsInput
   intervals?: Prisma.SessionIntervalCreateNestedManyWithoutSessionInput
+  pomodoroFocus?: Prisma.PomodoroFocusCreateNestedOneWithoutSessionInput
 }
 
 export type LearningSessionUncheckedCreateWithoutUserInput = {
@@ -619,6 +641,7 @@ export type LearningSessionUncheckedCreateWithoutUserInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   intervals?: Prisma.SessionIntervalUncheckedCreateNestedManyWithoutSessionInput
+  pomodoroFocus?: Prisma.PomodoroFocusUncheckedCreateNestedOneWithoutSessionInput
 }
 
 export type LearningSessionCreateOrConnectWithoutUserInput = {
@@ -674,6 +697,7 @@ export type LearningSessionCreateWithoutCategoryInput = {
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutLearningInput
   intervals?: Prisma.SessionIntervalCreateNestedManyWithoutSessionInput
+  pomodoroFocus?: Prisma.PomodoroFocusCreateNestedOneWithoutSessionInput
 }
 
 export type LearningSessionUncheckedCreateWithoutCategoryInput = {
@@ -687,6 +711,7 @@ export type LearningSessionUncheckedCreateWithoutCategoryInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   intervals?: Prisma.SessionIntervalUncheckedCreateNestedManyWithoutSessionInput
+  pomodoroFocus?: Prisma.PomodoroFocusUncheckedCreateNestedOneWithoutSessionInput
 }
 
 export type LearningSessionCreateOrConnectWithoutCategoryInput = {
@@ -726,6 +751,7 @@ export type LearningSessionCreateWithoutIntervalsInput = {
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutLearningInput
   category?: Prisma.CategoryCreateNestedOneWithoutSessionsInput
+  pomodoroFocus?: Prisma.PomodoroFocusCreateNestedOneWithoutSessionInput
 }
 
 export type LearningSessionUncheckedCreateWithoutIntervalsInput = {
@@ -739,6 +765,7 @@ export type LearningSessionUncheckedCreateWithoutIntervalsInput = {
   note?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  pomodoroFocus?: Prisma.PomodoroFocusUncheckedCreateNestedOneWithoutSessionInput
 }
 
 export type LearningSessionCreateOrConnectWithoutIntervalsInput = {
@@ -768,6 +795,7 @@ export type LearningSessionUpdateWithoutIntervalsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutLearningNestedInput
   category?: Prisma.CategoryUpdateOneWithoutSessionsNestedInput
+  pomodoroFocus?: Prisma.PomodoroFocusUpdateOneWithoutSessionNestedInput
 }
 
 export type LearningSessionUncheckedUpdateWithoutIntervalsInput = {
@@ -781,6 +809,79 @@ export type LearningSessionUncheckedUpdateWithoutIntervalsInput = {
   note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pomodoroFocus?: Prisma.PomodoroFocusUncheckedUpdateOneWithoutSessionNestedInput
+}
+
+export type LearningSessionCreateWithoutPomodoroFocusInput = {
+  id?: string
+  status: $Enums.LearningStatus
+  startedAt: Date | string
+  endedAt?: Date | string | null
+  durationSeconds?: number | null
+  note?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutLearningInput
+  category?: Prisma.CategoryCreateNestedOneWithoutSessionsInput
+  intervals?: Prisma.SessionIntervalCreateNestedManyWithoutSessionInput
+}
+
+export type LearningSessionUncheckedCreateWithoutPomodoroFocusInput = {
+  id?: string
+  userId: string
+  categoryId?: string | null
+  status: $Enums.LearningStatus
+  startedAt: Date | string
+  endedAt?: Date | string | null
+  durationSeconds?: number | null
+  note?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  intervals?: Prisma.SessionIntervalUncheckedCreateNestedManyWithoutSessionInput
+}
+
+export type LearningSessionCreateOrConnectWithoutPomodoroFocusInput = {
+  where: Prisma.LearningSessionWhereUniqueInput
+  create: Prisma.XOR<Prisma.LearningSessionCreateWithoutPomodoroFocusInput, Prisma.LearningSessionUncheckedCreateWithoutPomodoroFocusInput>
+}
+
+export type LearningSessionUpsertWithoutPomodoroFocusInput = {
+  update: Prisma.XOR<Prisma.LearningSessionUpdateWithoutPomodoroFocusInput, Prisma.LearningSessionUncheckedUpdateWithoutPomodoroFocusInput>
+  create: Prisma.XOR<Prisma.LearningSessionCreateWithoutPomodoroFocusInput, Prisma.LearningSessionUncheckedCreateWithoutPomodoroFocusInput>
+  where?: Prisma.LearningSessionWhereInput
+}
+
+export type LearningSessionUpdateToOneWithWhereWithoutPomodoroFocusInput = {
+  where?: Prisma.LearningSessionWhereInput
+  data: Prisma.XOR<Prisma.LearningSessionUpdateWithoutPomodoroFocusInput, Prisma.LearningSessionUncheckedUpdateWithoutPomodoroFocusInput>
+}
+
+export type LearningSessionUpdateWithoutPomodoroFocusInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumLearningStatusFieldUpdateOperationsInput | $Enums.LearningStatus
+  startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  durationSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutLearningNestedInput
+  category?: Prisma.CategoryUpdateOneWithoutSessionsNestedInput
+  intervals?: Prisma.SessionIntervalUpdateManyWithoutSessionNestedInput
+}
+
+export type LearningSessionUncheckedUpdateWithoutPomodoroFocusInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  categoryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumLearningStatusFieldUpdateOperationsInput | $Enums.LearningStatus
+  startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  durationSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  intervals?: Prisma.SessionIntervalUncheckedUpdateManyWithoutSessionNestedInput
 }
 
 export type LearningSessionCreateManyUserInput = {
@@ -806,6 +907,7 @@ export type LearningSessionUpdateWithoutUserInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   category?: Prisma.CategoryUpdateOneWithoutSessionsNestedInput
   intervals?: Prisma.SessionIntervalUpdateManyWithoutSessionNestedInput
+  pomodoroFocus?: Prisma.PomodoroFocusUpdateOneWithoutSessionNestedInput
 }
 
 export type LearningSessionUncheckedUpdateWithoutUserInput = {
@@ -819,6 +921,7 @@ export type LearningSessionUncheckedUpdateWithoutUserInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   intervals?: Prisma.SessionIntervalUncheckedUpdateManyWithoutSessionNestedInput
+  pomodoroFocus?: Prisma.PomodoroFocusUncheckedUpdateOneWithoutSessionNestedInput
 }
 
 export type LearningSessionUncheckedUpdateManyWithoutUserInput = {
@@ -856,6 +959,7 @@ export type LearningSessionUpdateWithoutCategoryInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutLearningNestedInput
   intervals?: Prisma.SessionIntervalUpdateManyWithoutSessionNestedInput
+  pomodoroFocus?: Prisma.PomodoroFocusUpdateOneWithoutSessionNestedInput
 }
 
 export type LearningSessionUncheckedUpdateWithoutCategoryInput = {
@@ -869,6 +973,7 @@ export type LearningSessionUncheckedUpdateWithoutCategoryInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   intervals?: Prisma.SessionIntervalUncheckedUpdateManyWithoutSessionNestedInput
+  pomodoroFocus?: Prisma.PomodoroFocusUncheckedUpdateOneWithoutSessionNestedInput
 }
 
 export type LearningSessionUncheckedUpdateManyWithoutCategoryInput = {
@@ -928,6 +1033,7 @@ export type LearningSessionSelect<ExtArgs extends runtime.Types.Extensions.Inter
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   category?: boolean | Prisma.LearningSession$categoryArgs<ExtArgs>
   intervals?: boolean | Prisma.LearningSession$intervalsArgs<ExtArgs>
+  pomodoroFocus?: boolean | Prisma.LearningSession$pomodoroFocusArgs<ExtArgs>
   _count?: boolean | Prisma.LearningSessionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["learningSession"]>
 
@@ -979,6 +1085,7 @@ export type LearningSessionInclude<ExtArgs extends runtime.Types.Extensions.Inte
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   category?: boolean | Prisma.LearningSession$categoryArgs<ExtArgs>
   intervals?: boolean | Prisma.LearningSession$intervalsArgs<ExtArgs>
+  pomodoroFocus?: boolean | Prisma.LearningSession$pomodoroFocusArgs<ExtArgs>
   _count?: boolean | Prisma.LearningSessionCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type LearningSessionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -996,6 +1103,7 @@ export type $LearningSessionPayload<ExtArgs extends runtime.Types.Extensions.Int
     user: Prisma.$UserPayload<ExtArgs>
     category: Prisma.$CategoryPayload<ExtArgs> | null
     intervals: Prisma.$SessionIntervalPayload<ExtArgs>[]
+    pomodoroFocus: Prisma.$PomodoroFocusPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1405,6 +1513,7 @@ export interface Prisma__LearningSessionClient<T, Null = never, ExtArgs extends 
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   category<T extends Prisma.LearningSession$categoryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.LearningSession$categoryArgs<ExtArgs>>): Prisma.Prisma__CategoryClient<runtime.Types.Result.GetResult<Prisma.$CategoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   intervals<T extends Prisma.LearningSession$intervalsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.LearningSession$intervalsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SessionIntervalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  pomodoroFocus<T extends Prisma.LearningSession$pomodoroFocusArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.LearningSession$pomodoroFocusArgs<ExtArgs>>): Prisma.Prisma__PomodoroFocusClient<runtime.Types.Result.GetResult<Prisma.$PomodoroFocusPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1885,6 +1994,25 @@ export type LearningSession$intervalsArgs<ExtArgs extends runtime.Types.Extensio
   take?: number
   skip?: number
   distinct?: Prisma.SessionIntervalScalarFieldEnum | Prisma.SessionIntervalScalarFieldEnum[]
+}
+
+/**
+ * LearningSession.pomodoroFocus
+ */
+export type LearningSession$pomodoroFocusArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PomodoroFocus
+   */
+  select?: Prisma.PomodoroFocusSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PomodoroFocus
+   */
+  omit?: Prisma.PomodoroFocusOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PomodoroFocusInclude<ExtArgs> | null
+  where?: Prisma.PomodoroFocusWhereInput
 }
 
 /**

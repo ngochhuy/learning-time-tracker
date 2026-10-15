@@ -19,8 +19,8 @@ export default function ProtectedRouteError({ error, retry }: {
       <h1 className="mt-2 font-[family-name:var(--font-geist)] text-2xl font-bold tracking-[-.04em] sm:text-3xl">Không thể tải trang này.</h1>
       <p className="mt-2 text-sm leading-6 text-[#54735c] dark:text-[#b6c6b8]">Thông tin học của bạn không bị thay đổi. Hãy thử tải lại nội dung hoặc quay về Timer.</p>
       <div className="mt-6 flex flex-wrap gap-3">
-        <button type="button" onClick={retry} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#2e5339] px-4 text-sm font-semibold text-white transition hover:bg-[#385a3e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#54735c]"><RefreshCw size={15} />Thử lại</button>
-        <Link href="/" className="inline-flex min-h-10 items-center rounded-lg border border-[#d2ddd0] bg-[#f0f4ed] px-4 text-sm font-semibold text-[#2e5339] transition hover:bg-[#e6ece2] dark:border-[#3d503f] dark:bg-[#162019] dark:text-[#d7e4d6]">Về Timer</Link>
+        <button type="button" onClick={retry} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#2e5339] px-4 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#385a3e] hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#54735c]"><RefreshCw size={15} />Thử lại</button>
+        <Link href="/" className="inline-flex min-h-10 items-center rounded-lg border border-[#d2ddd0] bg-[#f0f4ed] px-4 text-sm font-semibold text-[#2e5339] shadow-sm transition-all duration-200 hover:bg-[#e6ece2] hover:border-[#2e5339]/30 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 dark:border-[#3d503f] dark:bg-[#162019] dark:text-[#d7e4d6] dark:hover:bg-[#263329]">Về Timer</Link>
       </div>
     </section>
   </main>;

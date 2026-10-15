@@ -37,6 +37,10 @@ export default async function HistoryPage({ searchParams }: { searchParams: Prom
       categoryId: item.categoryId,
       categoryName: item.category?.name ?? null,
       note: item.note,
+      sessionType: item.pomodoroFocus ? "Pomodoro" : "Timer",
+      pomodoroTargetSeconds: item.pomodoroFocus?.targetSeconds ?? null,
+      pomodoroCompleted: Boolean(item.pomodoroFocus?.completedAt),
+      taskTitle: item.pomodoroFocus?.task?.title ?? null,
     }))}
   />;
 }

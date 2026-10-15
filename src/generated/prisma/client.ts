@@ -81,3 +81,18 @@ export type LearningSession = Prisma.LearningSessionModel
  * 
  */
 export type SessionInterval = Prisma.SessionIntervalModel
+/**
+ * Model PomodoroTask
+ * 
+ */
+export type PomodoroTask = Prisma.PomodoroTaskModel
+/**
+ * Model PomodoroPreferences
+ * 
+ */
+export type PomodoroPreferences = Prisma.PomodoroPreferencesModel
+/**
+ * Model PomodoroFocus
+ * 
+ */
+export type PomodoroFocus = Prisma.PomodoroFocusModel

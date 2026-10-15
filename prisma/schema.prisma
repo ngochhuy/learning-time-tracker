@@ -26,6 +26,9 @@ model User {
   settings      UserSettings?
   categories    Category[]
   learning      LearningSession[]
+  pomodoroTasks PomodoroTask[]
+  pomodoroPreferences PomodoroPreferences?
+  pomodoroFocuses PomodoroFocus[]
 
   @@map("users")
 }
@@ -101,6 +104,7 @@ model Category {
   updatedAt      DateTime          @updatedAt @map("updated_at")
   user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   sessions       LearningSession[]
+  pomodoroTasks  PomodoroTask[]
 
   @@unique([userId, normalizedName])
   @@index([userId])
@@ -121,6 +125,7 @@ model LearningSession {
   user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   category        Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   intervals       SessionInterval[]
+  pomodoroFocus   PomodoroFocus?
 
   @@index([userId, startedAt])
   @@index([categoryId])
@@ -137,4 +142,61 @@ model SessionInterval {
 
   @@index([sessionId, startedAt])
   @@map("session_intervals")
+}
+
+model PomodoroTask {
+  id                 String          @id @default(cuid())
+  userId             String          @map("user_id")
+  title              String          @db.VarChar(200)
+  plannedDate        DateTime        @default(now()) @db.Date @map("planned_date")
+  categoryId         String?         @map("category_id")
+  estimate           Int             @default(1)
+  completedPomodoros Int             @default(0) @map("completed_pomodoros")
+  done               Boolean         @default(false)
+  archivedAt         DateTime?       @map("archived_at")
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category           Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  focuses            PomodoroFocus[]
+
+  @@index([userId, plannedDate, archivedAt])
+  @@index([categoryId])
+  @@map("pomodoro_tasks")
+}
+
+model PomodoroPreferences {
+  id                    String   @id @default(cuid())
+  userId                String   @unique @map("user_id")
+  focusMinutes          Int      @default(25) @map("focus_minutes")
+  shortBreakMinutes     Int      @default(5) @map("short_break_minutes")
+  longBreakMinutes      Int      @default(15) @map("long_break_minutes")
+  customMinutes         Int      @default(45) @map("custom_minutes")
+  cyclesBeforeLongBreak Int      @default(4) @map("cycles_before_long_break")
+  autoStartBreak        Boolean  @default(true) @map("auto_start_break")
+  autoStartFocus        Boolean  @default(false) @map("auto_start_focus")
+  sound                 String   @default("off")
+  volume                Int      @default(65)
+  chime                 String   @default("ceramic")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("pomodoro_preferences")
+}
+
+model PomodoroFocus {
+  id            String          @id @default(cuid())
+  userId        String          @map("user_id")
+  sessionId     String          @unique @map("session_id")
+  taskId        String?         @map("task_id")
+  targetSeconds Int             @map("target_seconds")
+  completedAt   DateTime?       @map("completed_at")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session       LearningSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  task          PomodoroTask?   @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([userId, completedAt])
+  @@map("pomodoro_focuses")
 }

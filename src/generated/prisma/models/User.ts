@@ -203,6 +203,9 @@ export type UserWhereInput = {
   settings?: Prisma.XOR<Prisma.UserSettingsNullableScalarRelationFilter, Prisma.UserSettingsWhereInput> | null
   categories?: Prisma.CategoryListRelationFilter
   learning?: Prisma.LearningSessionListRelationFilter
+  pomodoroTasks?: Prisma.PomodoroTaskListRelationFilter
+  pomodoroPreferences?: Prisma.XOR<Prisma.PomodoroPreferencesNullableScalarRelationFilter, Prisma.PomodoroPreferencesWhereInput> | null
+  pomodoroFocuses?: Prisma.PomodoroFocusListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -218,6 +221,9 @@ export type UserOrderByWithRelationInput = {
   settings?: Prisma.UserSettingsOrderByWithRelationInput
   categories?: Prisma.CategoryOrderByRelationAggregateInput
   learning?: Prisma.LearningSessionOrderByRelationAggregateInput
+  pomodoroTasks?: Prisma.PomodoroTaskOrderByRelationAggregateInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesOrderByWithRelationInput
+  pomodoroFocuses?: Prisma.PomodoroFocusOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -236,6 +242,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   settings?: Prisma.XOR<Prisma.UserSettingsNullableScalarRelationFilter, Prisma.UserSettingsWhereInput> | null
   categories?: Prisma.CategoryListRelationFilter
   learning?: Prisma.LearningSessionListRelationFilter
+  pomodoroTasks?: Prisma.PomodoroTaskListRelationFilter
+  pomodoroPreferences?: Prisma.XOR<Prisma.PomodoroPreferencesNullableScalarRelationFilter, Prisma.PomodoroPreferencesWhereInput> | null
+  pomodoroFocuses?: Prisma.PomodoroFocusListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -277,6 +286,9 @@ export type UserCreateInput = {
   settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
   categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
   learning?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesCreateNestedOneWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -292,6 +304,9 @@ export type UserUncheckedCreateInput = {
   settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
   categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
   learning?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedCreateNestedOneWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -307,6 +322,9 @@ export type UserUpdateInput = {
   settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
   categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
   learning?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUpdateOneWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -322,6 +340,9 @@ export type UserUncheckedUpdateInput = {
   settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
   categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
   learning?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedUpdateOneWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -475,6 +496,48 @@ export type UserUpdateOneRequiredWithoutLearningNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutLearningInput, Prisma.UserUpdateWithoutLearningInput>, Prisma.UserUncheckedUpdateWithoutLearningInput>
 }
 
+export type UserCreateNestedOneWithoutPomodoroTasksInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPomodoroTasksInput, Prisma.UserUncheckedCreateWithoutPomodoroTasksInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPomodoroTasksInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutPomodoroTasksNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPomodoroTasksInput, Prisma.UserUncheckedCreateWithoutPomodoroTasksInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPomodoroTasksInput
+  upsert?: Prisma.UserUpsertWithoutPomodoroTasksInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPomodoroTasksInput, Prisma.UserUpdateWithoutPomodoroTasksInput>, Prisma.UserUncheckedUpdateWithoutPomodoroTasksInput>
+}
+
+export type UserCreateNestedOneWithoutPomodoroPreferencesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPomodoroPreferencesInput, Prisma.UserUncheckedCreateWithoutPomodoroPreferencesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPomodoroPreferencesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutPomodoroPreferencesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPomodoroPreferencesInput, Prisma.UserUncheckedCreateWithoutPomodoroPreferencesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPomodoroPreferencesInput
+  upsert?: Prisma.UserUpsertWithoutPomodoroPreferencesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPomodoroPreferencesInput, Prisma.UserUpdateWithoutPomodoroPreferencesInput>, Prisma.UserUncheckedUpdateWithoutPomodoroPreferencesInput>
+}
+
+export type UserCreateNestedOneWithoutPomodoroFocusesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPomodoroFocusesInput, Prisma.UserUncheckedCreateWithoutPomodoroFocusesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPomodoroFocusesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutPomodoroFocusesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutPomodoroFocusesInput, Prisma.UserUncheckedCreateWithoutPomodoroFocusesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutPomodoroFocusesInput
+  upsert?: Prisma.UserUpsertWithoutPomodoroFocusesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPomodoroFocusesInput, Prisma.UserUpdateWithoutPomodoroFocusesInput>, Prisma.UserUncheckedUpdateWithoutPomodoroFocusesInput>
+}
+
 export type UserCreateWithoutSessionsInput = {
   id: string
   name: string
@@ -487,6 +550,9 @@ export type UserCreateWithoutSessionsInput = {
   settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
   categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
   learning?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesCreateNestedOneWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -501,6 +567,9 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
   categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
   learning?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedCreateNestedOneWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -531,6 +600,9 @@ export type UserUpdateWithoutSessionsInput = {
   settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
   categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
   learning?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUpdateOneWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -545,6 +617,9 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
   categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
   learning?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedUpdateOneWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -559,6 +634,9 @@ export type UserCreateWithoutAccountsInput = {
   settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
   categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
   learning?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesCreateNestedOneWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -573,6 +651,9 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
   categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
   learning?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedCreateNestedOneWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -603,6 +684,9 @@ export type UserUpdateWithoutAccountsInput = {
   settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
   categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
   learning?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUpdateOneWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -617,6 +701,9 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
   categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
   learning?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedUpdateOneWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSettingsInput = {
@@ -631,6 +718,9 @@ export type UserCreateWithoutSettingsInput = {
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
   learning?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesCreateNestedOneWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSettingsInput = {
@@ -645,6 +735,9 @@ export type UserUncheckedCreateWithoutSettingsInput = {
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
   learning?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedCreateNestedOneWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSettingsInput = {
@@ -675,6 +768,9 @@ export type UserUpdateWithoutSettingsInput = {
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
   learning?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUpdateOneWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSettingsInput = {
@@ -689,6 +785,9 @@ export type UserUncheckedUpdateWithoutSettingsInput = {
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
   learning?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedUpdateOneWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutCategoriesInput = {
@@ -703,6 +802,9 @@ export type UserCreateWithoutCategoriesInput = {
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
   learning?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesCreateNestedOneWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutCategoriesInput = {
@@ -717,6 +819,9 @@ export type UserUncheckedCreateWithoutCategoriesInput = {
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
   learning?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedCreateNestedOneWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutCategoriesInput = {
@@ -747,6 +852,9 @@ export type UserUpdateWithoutCategoriesInput = {
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
   learning?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUpdateOneWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCategoriesInput = {
@@ -761,6 +869,9 @@ export type UserUncheckedUpdateWithoutCategoriesInput = {
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
   learning?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedUpdateOneWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutLearningInput = {
@@ -775,6 +886,9 @@ export type UserCreateWithoutLearningInput = {
   accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
   settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
   categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesCreateNestedOneWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutLearningInput = {
@@ -789,6 +903,9 @@ export type UserUncheckedCreateWithoutLearningInput = {
   accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
   settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
   categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedCreateNestedOneWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutLearningInput = {
@@ -819,6 +936,9 @@ export type UserUpdateWithoutLearningInput = {
   accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
   settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
   categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUpdateOneWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLearningInput = {
@@ -833,6 +953,261 @@ export type UserUncheckedUpdateWithoutLearningInput = {
   accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
   settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
   categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedUpdateOneWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutPomodoroTasksInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
+  categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
+  learning?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesCreateNestedOneWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutPomodoroTasksInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
+  categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
+  learning?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedCreateNestedOneWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutPomodoroTasksInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPomodoroTasksInput, Prisma.UserUncheckedCreateWithoutPomodoroTasksInput>
+}
+
+export type UserUpsertWithoutPomodoroTasksInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPomodoroTasksInput, Prisma.UserUncheckedUpdateWithoutPomodoroTasksInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPomodoroTasksInput, Prisma.UserUncheckedCreateWithoutPomodoroTasksInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPomodoroTasksInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPomodoroTasksInput, Prisma.UserUncheckedUpdateWithoutPomodoroTasksInput>
+}
+
+export type UserUpdateWithoutPomodoroTasksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
+  categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
+  learning?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUpdateOneWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPomodoroTasksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
+  categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
+  learning?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedUpdateOneWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutPomodoroPreferencesInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
+  categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
+  learning?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskCreateNestedManyWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutPomodoroPreferencesInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
+  categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
+  learning?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedCreateNestedManyWithoutUserInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutPomodoroPreferencesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPomodoroPreferencesInput, Prisma.UserUncheckedCreateWithoutPomodoroPreferencesInput>
+}
+
+export type UserUpsertWithoutPomodoroPreferencesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPomodoroPreferencesInput, Prisma.UserUncheckedUpdateWithoutPomodoroPreferencesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPomodoroPreferencesInput, Prisma.UserUncheckedCreateWithoutPomodoroPreferencesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPomodoroPreferencesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPomodoroPreferencesInput, Prisma.UserUncheckedUpdateWithoutPomodoroPreferencesInput>
+}
+
+export type UserUpdateWithoutPomodoroPreferencesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
+  categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
+  learning?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUpdateManyWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPomodoroPreferencesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
+  categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
+  learning?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroFocuses?: Prisma.PomodoroFocusUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutPomodoroFocusesInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsCreateNestedOneWithoutUserInput
+  categories?: Prisma.CategoryCreateNestedManyWithoutUserInput
+  learning?: Prisma.LearningSessionCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesCreateNestedOneWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutPomodoroFocusesInput = {
+  id: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  settings?: Prisma.UserSettingsUncheckedCreateNestedOneWithoutUserInput
+  categories?: Prisma.CategoryUncheckedCreateNestedManyWithoutUserInput
+  learning?: Prisma.LearningSessionUncheckedCreateNestedManyWithoutUserInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedCreateNestedManyWithoutUserInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedCreateNestedOneWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutPomodoroFocusesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutPomodoroFocusesInput, Prisma.UserUncheckedCreateWithoutPomodoroFocusesInput>
+}
+
+export type UserUpsertWithoutPomodoroFocusesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutPomodoroFocusesInput, Prisma.UserUncheckedUpdateWithoutPomodoroFocusesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutPomodoroFocusesInput, Prisma.UserUncheckedCreateWithoutPomodoroFocusesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutPomodoroFocusesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutPomodoroFocusesInput, Prisma.UserUncheckedUpdateWithoutPomodoroFocusesInput>
+}
+
+export type UserUpdateWithoutPomodoroFocusesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUpdateOneWithoutUserNestedInput
+  categories?: Prisma.CategoryUpdateManyWithoutUserNestedInput
+  learning?: Prisma.LearningSessionUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUpdateOneWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutPomodoroFocusesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  settings?: Prisma.UserSettingsUncheckedUpdateOneWithoutUserNestedInput
+  categories?: Prisma.CategoryUncheckedUpdateManyWithoutUserNestedInput
+  learning?: Prisma.LearningSessionUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroTasks?: Prisma.PomodoroTaskUncheckedUpdateManyWithoutUserNestedInput
+  pomodoroPreferences?: Prisma.PomodoroPreferencesUncheckedUpdateOneWithoutUserNestedInput
 }
 
 
@@ -845,6 +1220,8 @@ export type UserCountOutputType = {
   accounts: number
   categories: number
   learning: number
+  pomodoroTasks: number
+  pomodoroFocuses: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -852,6 +1229,8 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   accounts?: boolean | UserCountOutputTypeCountAccountsArgs
   categories?: boolean | UserCountOutputTypeCountCategoriesArgs
   learning?: boolean | UserCountOutputTypeCountLearningArgs
+  pomodoroTasks?: boolean | UserCountOutputTypeCountPomodoroTasksArgs
+  pomodoroFocuses?: boolean | UserCountOutputTypeCountPomodoroFocusesArgs
 }
 
 /**
@@ -892,6 +1271,20 @@ export type UserCountOutputTypeCountLearningArgs<ExtArgs extends runtime.Types.E
   where?: Prisma.LearningSessionWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountPomodoroTasksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PomodoroTaskWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountPomodoroFocusesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PomodoroFocusWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -906,6 +1299,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   settings?: boolean | Prisma.User$settingsArgs<ExtArgs>
   categories?: boolean | Prisma.User$categoriesArgs<ExtArgs>
   learning?: boolean | Prisma.User$learningArgs<ExtArgs>
+  pomodoroTasks?: boolean | Prisma.User$pomodoroTasksArgs<ExtArgs>
+  pomodoroPreferences?: boolean | Prisma.User$pomodoroPreferencesArgs<ExtArgs>
+  pomodoroFocuses?: boolean | Prisma.User$pomodoroFocusesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -946,6 +1342,9 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   settings?: boolean | Prisma.User$settingsArgs<ExtArgs>
   categories?: boolean | Prisma.User$categoriesArgs<ExtArgs>
   learning?: boolean | Prisma.User$learningArgs<ExtArgs>
+  pomodoroTasks?: boolean | Prisma.User$pomodoroTasksArgs<ExtArgs>
+  pomodoroPreferences?: boolean | Prisma.User$pomodoroPreferencesArgs<ExtArgs>
+  pomodoroFocuses?: boolean | Prisma.User$pomodoroFocusesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -959,6 +1358,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     settings: Prisma.$UserSettingsPayload<ExtArgs> | null
     categories: Prisma.$CategoryPayload<ExtArgs>[]
     learning: Prisma.$LearningSessionPayload<ExtArgs>[]
+    pomodoroTasks: Prisma.$PomodoroTaskPayload<ExtArgs>[]
+    pomodoroPreferences: Prisma.$PomodoroPreferencesPayload<ExtArgs> | null
+    pomodoroFocuses: Prisma.$PomodoroFocusPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1367,6 +1769,9 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   settings<T extends Prisma.User$settingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$settingsArgs<ExtArgs>>): Prisma.Prisma__UserSettingsClient<runtime.Types.Result.GetResult<Prisma.$UserSettingsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   categories<T extends Prisma.User$categoriesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$categoriesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CategoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   learning<T extends Prisma.User$learningArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$learningArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LearningSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  pomodoroTasks<T extends Prisma.User$pomodoroTasksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$pomodoroTasksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PomodoroTaskPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  pomodoroPreferences<T extends Prisma.User$pomodoroPreferencesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$pomodoroPreferencesArgs<ExtArgs>>): Prisma.Prisma__PomodoroPreferencesClient<runtime.Types.Result.GetResult<Prisma.$PomodoroPreferencesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  pomodoroFocuses<T extends Prisma.User$pomodoroFocusesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$pomodoroFocusesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PomodoroFocusPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1908,6 +2313,73 @@ export type User$learningArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.LearningSessionScalarFieldEnum | Prisma.LearningSessionScalarFieldEnum[]
+}
+
+/**
+ * User.pomodoroTasks
+ */
+export type User$pomodoroTasksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PomodoroTask
+   */
+  select?: Prisma.PomodoroTaskSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PomodoroTask
+   */
+  omit?: Prisma.PomodoroTaskOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PomodoroTaskInclude<ExtArgs> | null
+  where?: Prisma.PomodoroTaskWhereInput
+  orderBy?: Prisma.PomodoroTaskOrderByWithRelationInput | Prisma.PomodoroTaskOrderByWithRelationInput[]
+  cursor?: Prisma.PomodoroTaskWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PomodoroTaskScalarFieldEnum | Prisma.PomodoroTaskScalarFieldEnum[]
+}
+
+/**
+ * User.pomodoroPreferences
+ */
+export type User$pomodoroPreferencesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PomodoroPreferences
+   */
+  select?: Prisma.PomodoroPreferencesSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PomodoroPreferences
+   */
+  omit?: Prisma.PomodoroPreferencesOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PomodoroPreferencesInclude<ExtArgs> | null
+  where?: Prisma.PomodoroPreferencesWhereInput
+}
+
+/**
+ * User.pomodoroFocuses
+ */
+export type User$pomodoroFocusesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the PomodoroFocus
+   */
+  select?: Prisma.PomodoroFocusSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the PomodoroFocus
+   */
+  omit?: Prisma.PomodoroFocusOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PomodoroFocusInclude<ExtArgs> | null
+  where?: Prisma.PomodoroFocusWhereInput
+  orderBy?: Prisma.PomodoroFocusOrderByWithRelationInput | Prisma.PomodoroFocusOrderByWithRelationInput[]
+  cursor?: Prisma.PomodoroFocusWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.PomodoroFocusScalarFieldEnum | Prisma.PomodoroFocusScalarFieldEnum[]
 }
 
 /**

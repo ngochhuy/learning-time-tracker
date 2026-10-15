@@ -404,7 +404,10 @@ export const ModelName = {
   UserSettings: 'UserSettings',
   Category: 'Category',
   LearningSession: 'LearningSession',
-  SessionInterval: 'SessionInterval'
+  SessionInterval: 'SessionInterval',
+  PomodoroTask: 'PomodoroTask',
+  PomodoroPreferences: 'PomodoroPreferences',
+  PomodoroFocus: 'PomodoroFocus'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -420,7 +423,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "userSettings" | "category" | "learningSession" | "sessionInterval"
+    modelProps: "user" | "session" | "account" | "verification" | "userSettings" | "category" | "learningSession" | "sessionInterval" | "pomodoroTask" | "pomodoroPreferences" | "pomodoroFocus"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1016,6 +1019,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    PomodoroTask: {
+      payload: Prisma.$PomodoroTaskPayload<ExtArgs>
+      fields: Prisma.PomodoroTaskFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PomodoroTaskFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroTaskPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PomodoroTaskFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroTaskPayload>
+        }
+        findFirst: {
+          args: Prisma.PomodoroTaskFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroTaskPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PomodoroTaskFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroTaskPayload>
+        }
+        findMany: {
+          args: Prisma.PomodoroTaskFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroTaskPayload>[]
+        }
+        create: {
+          args: Prisma.PomodoroTaskCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroTaskPayload>
+        }
+        createMany: {
+          args: Prisma.PomodoroTaskCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PomodoroTaskCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroTaskPayload>[]
+        }
+        delete: {
+          args: Prisma.PomodoroTaskDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroTaskPayload>
+        }
+        update: {
+          args: Prisma.PomodoroTaskUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroTaskPayload>
+        }
+        deleteMany: {
+          args: Prisma.PomodoroTaskDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PomodoroTaskUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PomodoroTaskUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroTaskPayload>[]
+        }
+        upsert: {
+          args: Prisma.PomodoroTaskUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroTaskPayload>
+        }
+        aggregate: {
+          args: Prisma.PomodoroTaskAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePomodoroTask>
+        }
+        groupBy: {
+          args: Prisma.PomodoroTaskGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PomodoroTaskGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PomodoroTaskCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PomodoroTaskCountAggregateOutputType> | number
+        }
+      }
+    }
+    PomodoroPreferences: {
+      payload: Prisma.$PomodoroPreferencesPayload<ExtArgs>
+      fields: Prisma.PomodoroPreferencesFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PomodoroPreferencesFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroPreferencesPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PomodoroPreferencesFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroPreferencesPayload>
+        }
+        findFirst: {
+          args: Prisma.PomodoroPreferencesFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroPreferencesPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PomodoroPreferencesFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroPreferencesPayload>
+        }
+        findMany: {
+          args: Prisma.PomodoroPreferencesFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroPreferencesPayload>[]
+        }
+        create: {
+          args: Prisma.PomodoroPreferencesCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroPreferencesPayload>
+        }
+        createMany: {
+          args: Prisma.PomodoroPreferencesCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PomodoroPreferencesCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroPreferencesPayload>[]
+        }
+        delete: {
+          args: Prisma.PomodoroPreferencesDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroPreferencesPayload>
+        }
+        update: {
+          args: Prisma.PomodoroPreferencesUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroPreferencesPayload>
+        }
+        deleteMany: {
+          args: Prisma.PomodoroPreferencesDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PomodoroPreferencesUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PomodoroPreferencesUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroPreferencesPayload>[]
+        }
+        upsert: {
+          args: Prisma.PomodoroPreferencesUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroPreferencesPayload>
+        }
+        aggregate: {
+          args: Prisma.PomodoroPreferencesAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePomodoroPreferences>
+        }
+        groupBy: {
+          args: Prisma.PomodoroPreferencesGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PomodoroPreferencesGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PomodoroPreferencesCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PomodoroPreferencesCountAggregateOutputType> | number
+        }
+      }
+    }
+    PomodoroFocus: {
+      payload: Prisma.$PomodoroFocusPayload<ExtArgs>
+      fields: Prisma.PomodoroFocusFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PomodoroFocusFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroFocusPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PomodoroFocusFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroFocusPayload>
+        }
+        findFirst: {
+          args: Prisma.PomodoroFocusFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroFocusPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PomodoroFocusFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroFocusPayload>
+        }
+        findMany: {
+          args: Prisma.PomodoroFocusFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroFocusPayload>[]
+        }
+        create: {
+          args: Prisma.PomodoroFocusCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroFocusPayload>
+        }
+        createMany: {
+          args: Prisma.PomodoroFocusCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PomodoroFocusCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroFocusPayload>[]
+        }
+        delete: {
+          args: Prisma.PomodoroFocusDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroFocusPayload>
+        }
+        update: {
+          args: Prisma.PomodoroFocusUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroFocusPayload>
+        }
+        deleteMany: {
+          args: Prisma.PomodoroFocusDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PomodoroFocusUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PomodoroFocusUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroFocusPayload>[]
+        }
+        upsert: {
+          args: Prisma.PomodoroFocusUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PomodoroFocusPayload>
+        }
+        aggregate: {
+          args: Prisma.PomodoroFocusAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePomodoroFocus>
+        }
+        groupBy: {
+          args: Prisma.PomodoroFocusGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PomodoroFocusGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PomodoroFocusCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PomodoroFocusCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1164,6 +1389,56 @@ export const SessionIntervalScalarFieldEnum = {
 } as const
 
 export type SessionIntervalScalarFieldEnum = (typeof SessionIntervalScalarFieldEnum)[keyof typeof SessionIntervalScalarFieldEnum]
+
+
+export const PomodoroTaskScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  plannedDate: 'plannedDate',
+  categoryId: 'categoryId',
+  estimate: 'estimate',
+  completedPomodoros: 'completedPomodoros',
+  done: 'done',
+  archivedAt: 'archivedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PomodoroTaskScalarFieldEnum = (typeof PomodoroTaskScalarFieldEnum)[keyof typeof PomodoroTaskScalarFieldEnum]
+
+
+export const PomodoroPreferencesScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  focusMinutes: 'focusMinutes',
+  shortBreakMinutes: 'shortBreakMinutes',
+  longBreakMinutes: 'longBreakMinutes',
+  customMinutes: 'customMinutes',
+  cyclesBeforeLongBreak: 'cyclesBeforeLongBreak',
+  autoStartBreak: 'autoStartBreak',
+  autoStartFocus: 'autoStartFocus',
+  sound: 'sound',
+  volume: 'volume',
+  chime: 'chime',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PomodoroPreferencesScalarFieldEnum = (typeof PomodoroPreferencesScalarFieldEnum)[keyof typeof PomodoroPreferencesScalarFieldEnum]
+
+
+export const PomodoroFocusScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  sessionId: 'sessionId',
+  taskId: 'taskId',
+  targetSeconds: 'targetSeconds',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type PomodoroFocusScalarFieldEnum = (typeof PomodoroFocusScalarFieldEnum)[keyof typeof PomodoroFocusScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1431,6 +1706,9 @@ export type GlobalOmitConfig = {
   category?: Prisma.CategoryOmit
   learningSession?: Prisma.LearningSessionOmit
   sessionInterval?: Prisma.SessionIntervalOmit
+  pomodoroTask?: Prisma.PomodoroTaskOmit
+  pomodoroPreferences?: Prisma.PomodoroPreferencesOmit
+  pomodoroFocus?: Prisma.PomodoroFocusOmit
 }
 
 /* Types for Logging */

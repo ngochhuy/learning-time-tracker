@@ -7,6 +7,7 @@ export type TimerSession = {
   intervals: Array<{ startedAt: string; endedAt: string | null }>;
   category: { id: string; name: string } | null;
   note: string | null;
+  pomodoroFocus?: { targetSeconds: number; taskId: string | null } | null;
 };
 
 export function serializeTimerSession(session: ActiveSession): TimerSession {
@@ -15,6 +16,7 @@ export function serializeTimerSession(session: ActiveSession): TimerSession {
     status: session.status,
     category: session.category,
     note: session.note,
+    pomodoroFocus: session.pomodoroFocus,
     intervals: session.intervals.map((interval) => ({
       startedAt: interval.startedAt.toISOString(),
       endedAt: interval.endedAt?.toISOString() ?? null,
