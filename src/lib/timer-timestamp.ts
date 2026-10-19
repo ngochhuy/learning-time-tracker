@@ -4,6 +4,16 @@ const MAX_TIMER_REQUEST_AGE_MS = 30_000;
 
 function parseRecentClientTimestamp(value: string, receivedAt: Date): Date {
   const clickedAt = new Date(value);
+
+  console.info("timer_timestamp_check", {
+    clickedAt: value,
+    receivedAt: receivedAt.toISOString(),
+    differenceMs: clickedAt.getTime() - receivedAt.getTime(),
+    canonical: Number.isFinite(clickedAt.getTime())
+      ? clickedAt.toISOString() === value
+      : false,
+  });
+
   if (
     !Number.isFinite(clickedAt.getTime()) ||
     clickedAt.toISOString() !== value ||
