@@ -75,10 +75,11 @@ export async function updatePomodoroPreferences(data: PomodoroPreferencesData): 
 }
 
 export async function startPomodoroSession(clickedAt: string, taskId: string | null, targetMinutes: number): Promise<ActionResult<TimerSession>> {
+  const receivedAt = new Date();
   try {
     const user = await getCurrentUser();
     const targetSeconds = z.number().int().min(15).max(60).parse(targetMinutes) * 60;
-    const session = await startLearningSession(user.id, null, clickedAt, null, { taskId: taskId ? id.parse(taskId) : null, targetSeconds });
+    const session = await startLearningSession(user.id, null, clickedAt, null, { taskId: taskId ? id.parse(taskId) : null, targetSeconds }, receivedAt);
     return { ok: true, data: serializeTimerSession(session) };
   } catch (error) { return toActionError(error); }
 }
@@ -93,7 +94,8 @@ export async function completePomodoroSession(sessionId: string): Promise<Action
 }
 
 export async function pausePomodoroSession(sessionId: string, clickedAt: string): Promise<ActionResult<TimerSession>> {
-  try { const user = await getCurrentUser(); const session = await pauseLearningSession(user.id, id.parse(sessionId), clickedAt, "pomodoro"); revalidatePomodoroViews(); return { ok: true, data: serializeTimerSession(session) }; } catch (error) { return toActionError(error); }
+  const receivedAt = new Date();
+  try { const user = await getCurrentUser(); const session = await pauseLearningSession(user.id, id.parse(sessionId), clickedAt, "pomodoro", receivedAt); revalidatePomodoroViews(); return { ok: true, data: serializeTimerSession(session) }; } catch (error) { return toActionError(error); }
 }
 
 export async function resumePomodoroSession(sessionId: string): Promise<ActionResult<TimerSession>> {

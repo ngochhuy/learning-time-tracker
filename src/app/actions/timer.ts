@@ -27,9 +27,10 @@ function refreshCompletedSessionViews() {
 }
 
 export async function startSession(categoryId: string | null, clickedAt: string, note?: string | null): Promise<ActionResult<TimerSession>> {
+  const receivedAt = new Date();
   try {
     const user = await getCurrentUser();
-    const session = await startLearningSession(user.id, optionalId.parse(categoryId) ?? null, clickedAt, note);
+    const session = await startLearningSession(user.id, optionalId.parse(categoryId) ?? null, clickedAt, note, undefined, receivedAt);
     return { ok: true, data: serializeTimerSession(session) };
   } catch (error) {
     return toActionError(error);
@@ -37,9 +38,10 @@ export async function startSession(categoryId: string | null, clickedAt: string,
 }
 
 export async function pauseSession(sessionId: string, clickedAt: string): Promise<ActionResult<TimerSession>> {
+  const receivedAt = new Date();
   try {
     const user = await getCurrentUser();
-    const session = await pauseLearningSession(user.id, sessionIdSchema.parse(sessionId), clickedAt, "timer");
+    const session = await pauseLearningSession(user.id, sessionIdSchema.parse(sessionId), clickedAt, "timer", receivedAt);
     return { ok: true, data: serializeTimerSession(session) };
   } catch (error) {
     return toActionError(error);

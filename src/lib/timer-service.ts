@@ -55,7 +55,7 @@ export async function getActiveSession(userId: string): Promise<ActiveSession | 
   });
 }
 
-export async function startLearningSession(userId: string, categoryId: string | null, clickedAt: string, note?: string | null, pomodoro?: { targetSeconds: number; taskId: string | null; categoryId?: string | null }) {
+export async function startLearningSession(userId: string, categoryId: string | null, clickedAt: string, note?: string | null, pomodoro?: { targetSeconds: number; taskId: string | null; categoryId?: string | null }, receivedAt: Date = new Date()) {
   const normalizedNote = normalizeSessionNote(note);
   try {
     return await runSerializable(async (tx) => {
@@ -76,7 +76,7 @@ export async function startLearningSession(userId: string, categoryId: string | 
         await verifyCategory(tx, userId, pomodoro.categoryId);
       }
 
-      const now = validateStartTimestamp(clickedAt, new Date());
+      const now = validateStartTimestamp(clickedAt, receivedAt);
       const session = await tx.learningSession.create({
         data: {
           userId,
@@ -102,7 +102,7 @@ export async function startLearningSession(userId: string, categoryId: string | 
   }
 }
 
-export async function pauseLearningSession(userId: string, sessionId: string, clickedAt: string, kind: SessionKind = "timer") {
+export async function pauseLearningSession(userId: string, sessionId: string, clickedAt: string, kind: SessionKind = "timer", receivedAt: Date = new Date()) {
   return runSerializable(async (tx) => {
     const session = await getOwnedSession(tx, userId, sessionId);
     assertSessionKind(session, kind);
@@ -111,7 +111,7 @@ export async function pauseLearningSession(userId: string, sessionId: string, cl
     const openInterval = session.intervals.find((interval) => !interval.endedAt);
     if (!openInterval) throw new AppError("INVALID_SESSION_STATE");
 
-    const endedAt = validatePauseTimestamp(clickedAt, openInterval.startedAt, new Date());
+    const endedAt = validatePauseTimestamp(clickedAt, openInterval.startedAt, receivedAt);
     await tx.sessionInterval.update({ where: { id: openInterval.id }, data: { endedAt } });
     return tx.learningSession.update({
       where: { id: session.id },
