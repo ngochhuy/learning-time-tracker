@@ -24,8 +24,8 @@ vi.mock("@/lib/timer-service", () => ({
   changeActiveSessionCategory: mocks.changeActiveSessionCategory,
 }));
 
-import { pauseSession, startSession } from "@/app/actions/timer";
-import { pausePomodoroSession, startPomodoroSession } from "@/app/actions/pomodoro";
+import { finishSession, pauseSession, resumeSession, startSession } from "@/app/actions/timer";
+import { completePomodoroSession, finishPomodoroEarly, pausePomodoroSession, resumePomodoroSession, startPomodoroSession } from "@/app/actions/pomodoro";
 import { AppError } from "@/lib/errors";
 
 const serverReceivedAt = new Date("2026-10-19T01:39:26.237Z");
@@ -143,5 +143,77 @@ describe("timer action receive timestamps", () => {
       code: "INVALID_TIME_RANGE",
       diagnosticId: expect.stringMatching(/^[0-9a-f-]{36}$/),
     });
+  });
+
+  it("passes clickedAt and diagnostic context for Timer Resume and Finish", async () => {
+    mocks.resumeLearningSession.mockResolvedValue(session);
+    mocks.finishLearningSession.mockResolvedValue({ id: "session-1" });
+
+    await resumeSession("session-1", clickedAt);
+    expect(mocks.resumeLearningSession).toHaveBeenCalledWith(
+      "user-1",
+      "session-1",
+      clickedAt,
+      "timer",
+      serverReceivedAt,
+      expect.objectContaining({ operation: "resume", sessionKind: "timer", diagnosticId: expect.any(String) }),
+    );
+
+    vi.setSystemTime(serverReceivedAt);
+    await finishSession("session-1", clickedAt, "");
+    expect(mocks.finishLearningSession).toHaveBeenCalledWith(
+      "user-1",
+      "session-1",
+      clickedAt,
+      "",
+      false,
+      "timer",
+      false,
+      serverReceivedAt,
+      expect.objectContaining({ operation: "finish", sessionKind: "timer", diagnosticId: expect.any(String) }),
+    );
+  });
+
+  it("passes clickedAt and diagnostic context for Pomodoro Resume and Finish", async () => {
+    mocks.resumeLearningSession.mockResolvedValue(session);
+    mocks.finishLearningSession.mockResolvedValue({ id: "session-1" });
+
+    await resumePomodoroSession("session-1", clickedAt);
+    expect(mocks.resumeLearningSession).toHaveBeenCalledWith(
+      "user-1",
+      "session-1",
+      clickedAt,
+      "pomodoro",
+      serverReceivedAt,
+      expect.objectContaining({ operation: "resume", sessionKind: "pomodoro", diagnosticId: expect.any(String) }),
+    );
+
+    vi.setSystemTime(serverReceivedAt);
+    await completePomodoroSession("session-1", clickedAt);
+    expect(mocks.finishLearningSession).toHaveBeenCalledWith(
+      "user-1",
+      "session-1",
+      clickedAt,
+      undefined,
+      true,
+      "pomodoro",
+      false,
+      serverReceivedAt,
+      expect.objectContaining({ operation: "finish", sessionKind: "pomodoro", diagnosticId: expect.any(String) }),
+    );
+
+    vi.setSystemTime(serverReceivedAt);
+    await finishPomodoroEarly("session-1", clickedAt, true);
+    expect(mocks.finishLearningSession).toHaveBeenLastCalledWith(
+      "user-1",
+      "session-1",
+      clickedAt,
+      undefined,
+      false,
+      "pomodoro",
+      true,
+      serverReceivedAt,
+      expect.objectContaining({ operation: "finish", sessionKind: "pomodoro", diagnosticId: expect.any(String) }),
+    );
   });
 });

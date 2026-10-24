@@ -6,6 +6,7 @@ import { runSerializable } from "@/lib/transactions";
 import { DateTime } from "luxon";
 import { allocateIntervalsByDay } from "@/lib/dashboard-service";
 import { normalizeSessionNote } from "@/lib/session-note";
+import { assertClosedIntervalsValid, assertSessionDurationAllowed } from "@/lib/timer";
 
 const completedInclude = {
   category: { select: { id: true, name: true } },
@@ -95,8 +96,9 @@ export async function updateCompletedSession(
   endedAt: Date,
   categoryId: string | null,
   note?: string | null,
+  allowLongSession = false,
 ) {
-  if (startedAt >= endedAt || endedAt > new Date()) throw new AppError("INVALID_TIME_RANGE");
+  if (startedAt >= endedAt) throw new AppError("INVALID_TIME_RANGE");
   const normalizedNote = note === undefined ? undefined : normalizeSessionNote(note);
   return runSerializable(async (tx) => {
     const session = await tx.learningSession.findFirst({
@@ -114,8 +116,10 @@ export async function updateCompletedSession(
     for (const interval of revised) {
       await tx.sessionInterval.update({ where: { id: interval.id }, data: { startedAt: interval.startedAt, endedAt: interval.endedAt } });
     }
+    assertClosedIntervalsValid(revised);
     const durationSeconds = sumIntervalSeconds(revised);
     if (durationSeconds < 1) throw new AppError("INVALID_TIME_RANGE");
+    assertSessionDurationAllowed(durationSeconds, allowLongSession);
     if (session.pomodoroFocus) {
       await tx.pomodoroFocus.update({ where: { sessionId }, data: { completedAt: durationSeconds >= session.pomodoroFocus.targetSeconds ? endedAt : null } });
     }

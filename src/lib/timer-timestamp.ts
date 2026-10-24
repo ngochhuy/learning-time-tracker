@@ -1,27 +1,21 @@
 import { AppError } from "@/lib/errors";
 import { logger } from "@/lib/logger";
 
-const MAX_TIMER_REQUEST_AGE_MS = 30_000;
-const MAX_FUTURE_CLOCK_SKEW_MS = 5_000;
-
 export type TimestampValidationContext = {
   diagnosticId: string;
-  operation: "start" | "pause";
+  operation: "start" | "pause" | "resume" | "finish";
   sessionKind: "timer" | "pomodoro";
 };
 
 type TimestampRejectionReason =
   | "invalid_format"
   | "non_canonical_iso"
-  | "future_clock_skew"
-  | "request_too_old"
-  | "not_after_interval_start";
+  | "not_after_interval_start"
+  | "not_after_previous_interval";
 
 type ParsedTimestamp = {
   clickedAt: Date;
-  effectiveAt: Date;
   deltaMs: number;
-  acceptedReason: "within_bounds" | "future_clock_skew_clamped";
 };
 
 function baseLogContext(context: TimestampValidationContext, receivedAt: Date) {
@@ -30,8 +24,6 @@ function baseLogContext(context: TimestampValidationContext, receivedAt: Date) {
     operation: context.operation,
     sessionKind: context.sessionKind,
     receivedAt: receivedAt.toISOString(),
-    maxFutureClockSkewMs: MAX_FUTURE_CLOCK_SKEW_MS,
-    maxRequestAgeMs: MAX_TIMER_REQUEST_AGE_MS,
   };
 }
 
@@ -60,15 +52,14 @@ function logAcceptance(
   logger.diagnostic("timer_timestamp_validation", {
     ...baseLogContext(context, receivedAt),
     outcome: "accepted",
-    reason: parsed.acceptedReason,
+    reason: "client_time_authoritative",
     clickedAt: parsed.clickedAt.toISOString(),
-    effectiveAt: parsed.effectiveAt.toISOString(),
     deltaMs: parsed.deltaMs,
     ...details,
   });
 }
 
-function parseRecentClientTimestamp(
+function parseClientTimestamp(
   value: string,
   receivedAt: Date,
   context?: TimestampValidationContext,
@@ -89,28 +80,28 @@ function parseRecentClientTimestamp(
     throw new AppError("INVALID_TIME_RANGE");
   }
 
-  if (deltaMs > MAX_FUTURE_CLOCK_SKEW_MS) {
-    logRejection(context, receivedAt, "future_clock_skew", {
-      clickedAt: canonicalClickedAt,
-      deltaMs,
+  return { clickedAt, deltaMs };
+}
+
+function validateAfter(
+  value: string,
+  boundary: Date,
+  receivedAt: Date,
+  context: TimestampValidationContext | undefined,
+  reason: TimestampRejectionReason,
+  boundaryName: "intervalStartedAt" | "previousIntervalEndedAt",
+) {
+  const parsed = parseClientTimestamp(value, receivedAt, context);
+  if (parsed.clickedAt.getTime() <= boundary.getTime()) {
+    logRejection(context, receivedAt, reason, {
+      clickedAt: parsed.clickedAt.toISOString(),
+      deltaMs: parsed.deltaMs,
+      [boundaryName]: boundary.toISOString(),
     });
     throw new AppError("INVALID_TIME_RANGE");
   }
-
-  if (deltaMs < -MAX_TIMER_REQUEST_AGE_MS) {
-    logRejection(context, receivedAt, "request_too_old", {
-      clickedAt: canonicalClickedAt,
-      deltaMs,
-    });
-    throw new AppError("INVALID_TIME_RANGE");
-  }
-
-  return {
-    clickedAt,
-    effectiveAt: new Date(Math.min(clickedAt.getTime(), receivedAt.getTime())),
-    deltaMs,
-    acceptedReason: deltaMs > 0 ? "future_clock_skew_clamped" : "within_bounds",
-  };
+  logAcceptance(context, receivedAt, parsed, { [boundaryName]: boundary.toISOString() });
+  return parsed.clickedAt;
 }
 
 export function validateStartTimestamp(
@@ -118,9 +109,9 @@ export function validateStartTimestamp(
   receivedAt: Date,
   context?: TimestampValidationContext,
 ): Date {
-  const parsed = parseRecentClientTimestamp(value, receivedAt, context);
+  const parsed = parseClientTimestamp(value, receivedAt, context);
   logAcceptance(context, receivedAt, parsed);
-  return parsed.effectiveAt;
+  return parsed.clickedAt;
 }
 
 export function validatePauseTimestamp(
@@ -129,18 +120,25 @@ export function validatePauseTimestamp(
   receivedAt: Date,
   context?: TimestampValidationContext,
 ): Date {
-  const parsed = parseRecentClientTimestamp(value, receivedAt, context);
-  if (parsed.effectiveAt.getTime() <= intervalStartedAt.getTime()) {
-    logRejection(context, receivedAt, "not_after_interval_start", {
-      clickedAt: parsed.clickedAt.toISOString(),
-      effectiveAt: parsed.effectiveAt.toISOString(),
-      deltaMs: parsed.deltaMs,
-      intervalStartedAt: intervalStartedAt.toISOString(),
-    });
-    throw new AppError("INVALID_TIME_RANGE");
-  }
-  logAcceptance(context, receivedAt, parsed, {
-    intervalStartedAt: intervalStartedAt.toISOString(),
-  });
-  return parsed.effectiveAt;
+  return validateAfter(value, intervalStartedAt, receivedAt, context, "not_after_interval_start", "intervalStartedAt");
+}
+
+export function validateResumeTimestamp(
+  value: string,
+  previousIntervalEndedAt: Date,
+  receivedAt: Date,
+  context?: TimestampValidationContext,
+): Date {
+  return validateAfter(value, previousIntervalEndedAt, receivedAt, context, "not_after_previous_interval", "previousIntervalEndedAt");
+}
+
+export function validateFinishTimestamp(
+  value: string,
+  previousBoundary: Date,
+  receivedAt: Date,
+  context?: TimestampValidationContext,
+  boundaryName: "intervalStartedAt" | "previousIntervalEndedAt" = "intervalStartedAt",
+): Date {
+  const reason = boundaryName === "previousIntervalEndedAt" ? "not_after_previous_interval" : "not_after_interval_start";
+  return validateAfter(value, previousBoundary, receivedAt, context, reason, boundaryName);
 }

@@ -1,8 +1,10 @@
 import { LearningStatus, Prisma } from "@/generated/prisma/client";
 import { AppError } from "@/lib/errors";
-import { getClosedDurationSeconds } from "@/lib/timer";
+import { assertClosedIntervalsValid, assertSessionDurationAllowed, getClosedDurationSeconds } from "@/lib/timer";
 import {
   validatePauseTimestamp,
+  validateFinishTimestamp,
+  validateResumeTimestamp,
   validateStartTimestamp,
   type TimestampValidationContext,
 } from "@/lib/timer-timestamp";
@@ -140,16 +142,24 @@ export async function pauseLearningSession(
   });
 }
 
-export async function resumeLearningSession(userId: string, sessionId: string, kind: SessionKind = "timer") {
+export async function resumeLearningSession(
+  userId: string,
+  sessionId: string,
+  clickedAt: string,
+  kind: SessionKind = "timer",
+  receivedAt: Date = new Date(),
+  timestampContext?: TimestampValidationContext,
+) {
   return runSerializable(async (tx) => {
     const session = await getOwnedSession(tx, userId, sessionId);
     assertSessionKind(session, kind);
     if (session.status !== LearningStatus.PAUSED) throw new AppError("INVALID_SESSION_STATE");
-    if (session.intervals.some((interval) => !interval.endedAt)) {
+    const previousInterval = session.intervals.at(-1);
+    if (!previousInterval?.endedAt || session.intervals.some((interval) => !interval.endedAt)) {
       throw new AppError("INVALID_SESSION_STATE");
     }
 
-    const now = new Date();
+    const now = validateResumeTimestamp(clickedAt, previousInterval.endedAt, receivedAt, timestampContext);
     return tx.learningSession.update({
       where: { id: session.id },
       data: {
@@ -161,7 +171,17 @@ export async function resumeLearningSession(userId: string, sessionId: string, k
   });
 }
 
-export async function finishLearningSession(userId: string, sessionId: string, note?: string | null, completePomodoro = false, kind: SessionKind = completePomodoro ? "pomodoro" : "timer") {
+export async function finishLearningSession(
+  userId: string,
+  sessionId: string,
+  clickedAt: string,
+  note?: string | null,
+  completePomodoro = false,
+  kind: SessionKind = completePomodoro ? "pomodoro" : "timer",
+  allowLongSession = false,
+  receivedAt: Date = new Date(),
+  timestampContext?: TimestampValidationContext,
+) {
   const normalizedNote = note === undefined ? undefined : normalizeSessionNote(note);
   return runSerializable(async (tx) => {
     const session = await getOwnedSession(tx, userId, sessionId);
@@ -170,8 +190,17 @@ export async function finishLearningSession(userId: string, sessionId: string, n
       throw new AppError("INVALID_SESSION_STATE");
     }
 
-    const now = new Date();
     const openInterval = session.intervals.find((interval) => !interval.endedAt);
+    const lastClosedInterval = session.intervals.at(-1);
+    const finishBoundary = openInterval?.startedAt ?? lastClosedInterval?.endedAt;
+    if (!finishBoundary) throw new AppError("INVALID_SESSION_STATE");
+    const now = validateFinishTimestamp(
+      clickedAt,
+      finishBoundary,
+      receivedAt,
+      timestampContext,
+      openInterval ? "intervalStartedAt" : "previousIntervalEndedAt",
+    );
     if (openInterval) {
       const closedSeconds = getClosedDurationSeconds(session.intervals);
       const targetEndAt = completePomodoro && session.pomodoroFocus && closedSeconds < session.pomodoroFocus.targetSeconds
@@ -184,8 +213,10 @@ export async function finishLearningSession(userId: string, sessionId: string, n
       where: { sessionId: session.id },
       orderBy: { startedAt: "asc" },
     });
+    assertClosedIntervalsValid(intervals);
     const durationSeconds = getClosedDurationSeconds(intervals);
     if (durationSeconds < 1) throw new AppError("INVALID_TIME_RANGE");
+    assertSessionDurationAllowed(durationSeconds, allowLongSession);
     if (completePomodoro && (!session.pomodoroFocus || durationSeconds < session.pomodoroFocus.targetSeconds - 1)) {
       throw new AppError("POMODORO_NOT_READY");
     }

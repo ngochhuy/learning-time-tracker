@@ -11,10 +11,10 @@ const timestamp = z.string().datetime({ offset: true }).transform((value) => new
 
 function revalidateLearningViews() { for (const path of ["/history", "/dashboard", "/", "/pomodoro", "/categories"]) revalidatePath(path); }
 
-export async function updateSession(sessionId: string, startedAt: string, endedAt: string, categoryId?: string | null, note?: string | null): Promise<ActionResult<{ startedAt: string; endedAt: string; durationSeconds: number; note: string | null }>> {
+export async function updateSession(sessionId: string, startedAt: string, endedAt: string, categoryId?: string | null, note?: string | null, allowLongSession = false): Promise<ActionResult<{ startedAt: string; endedAt: string; durationSeconds: number; note: string | null }>> {
   try {
     const user = await getCurrentUser();
-    const session = await updateCompletedSession(user.id, id.parse(sessionId), timestamp.parse(startedAt), timestamp.parse(endedAt), categoryId ? id.parse(categoryId) : null, note);
+    const session = await updateCompletedSession(user.id, id.parse(sessionId), timestamp.parse(startedAt), timestamp.parse(endedAt), categoryId ? id.parse(categoryId) : null, note, allowLongSession);
     revalidateLearningViews();
     return { ok: true, data: { startedAt: session.startedAt.toISOString(), endedAt: session.endedAt!.toISOString(), durationSeconds: session.durationSeconds!, note: session.note } };
   } catch (error) { return toActionError(error); }

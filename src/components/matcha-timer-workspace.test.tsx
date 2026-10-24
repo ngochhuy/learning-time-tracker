@@ -190,7 +190,7 @@ describe("optimistic timer controls", () => {
 
     fireEvent.change(screen.getByRole("textbox", { name: "Ghi chú phiên học" }), { target: { value: "Đã hoàn thành bài tập" } });
     fireEvent.click(screen.getByRole("button", { name: "Kết thúc phiên" }));
-    expect(vi.mocked(finishSession)).toHaveBeenCalledWith(baseSession.id, "Đã hoàn thành bài tập");
+    expect(vi.mocked(finishSession)).toHaveBeenCalledWith(baseSession.id, expect.any(String), "Đã hoàn thành bài tập");
   });
 
   it("restores the saved note on reload and auto-saves edits after a pause in typing", async () => {

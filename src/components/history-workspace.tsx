@@ -151,7 +151,13 @@ export function HistoryWorkspace({ params, overview, categories, page, pageSize,
     const categoryId = String(form.get("categoryId") || "") || null;
     const note = String(form.get("note") ?? "");
     startTransition(async () => {
-      const result = await updateSession(editing.id, start.toUTC().toISO()!, end.toUTC().toISO()!, categoryId, note);
+      const startIso = start.toUTC().toISO()!;
+      const endIso = end.toUTC().toISO()!;
+      let result = await updateSession(editing.id, startIso, endIso, categoryId, note);
+      if (!result.ok && result.code === "SESSION_DURATION_CONFIRMATION_REQUIRED") {
+        if (!window.confirm(result.message)) return;
+        result = await updateSession(editing.id, startIso, endIso, categoryId, note, true);
+      }
       if (!result.ok) { setToast({ text: result.message, error: true }); return; }
       setItems((current) => current.map((item) => item.id === editing.id ? {
         ...item,

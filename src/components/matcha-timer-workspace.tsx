@@ -190,6 +190,7 @@ export function MatchaTimerWorkspace({ session: serverSession, hasPomodoroSessio
     optimistic: () => void,
     commit: (data: T) => void,
     rollback: () => void,
+    confirmationAction?: () => Promise<ActionResult<T>>,
   ) {
     if (mutationInFlightRef.current || databaseUnavailable) return;
     mutationInFlightRef.current = true;
@@ -198,7 +199,14 @@ export function MatchaTimerWorkspace({ session: serverSession, hasPomodoroSessio
     optimistic();
     startTransition(async () => {
       try {
-        const result = await action();
+        let result = await action();
+        if (!result.ok && result.code === "SESSION_DURATION_CONFIRMATION_REQUIRED" && confirmationAction) {
+          if (!window.confirm(result.message)) {
+            rollback();
+            return;
+          }
+          result = await confirmationAction();
+        }
         if (result.ok) commit(result.data);
         else {
           rollback();
@@ -270,7 +278,7 @@ export function MatchaTimerWorkspace({ session: serverSession, hasPomodoroSessio
       );
     } else {
       setNow(Date.now());
-      runSessionAction("resume", () => resumeSession(session.id), previewResumeSession(session, clickedAt));
+      runSessionAction("resume", () => resumeSession(session.id, clickedAt), previewResumeSession(session, clickedAt));
     }
   }
   function selectCategory(categoryId: string) {
@@ -295,11 +303,12 @@ export function MatchaTimerWorkspace({ session: serverSession, hasPomodoroSessio
   function finishCurrentSession() {
     if (!session || disabled) return;
     const previous = session;
+    const clickedAt = new Date().toISOString();
     const finishingNote = noteRef.current;
-    runAction("finish", () => finishSession(session.id, finishingNote), () => setSession(null), () => {
+    runAction("finish", () => finishSession(session.id, clickedAt, finishingNote), () => setSession(null), () => {
       setSession(null); noteRef.current = ""; savedNoteRef.current = ""; setNoteDraft(""); setNoteSaveState("idle");
       window.sessionStorage.removeItem(noteDraftKey(previous.id));
-    }, () => setSession(previous));
+    }, () => setSession(previous), () => finishSession(session.id, clickedAt, finishingNote, true));
   }
   function cancelCurrentSession() {
     if (!session || disabled || !window.confirm("Hủy phiên học hiện tại? Thời gian chưa hoàn thành sẽ không được lưu.")) return;

@@ -232,6 +232,7 @@ export function PomodoroWorkspace({
     optimistic: () => void,
     commit: (data: T) => void,
     rollback: () => void,
+    confirmationAction?: () => Promise<ActionResult<T>>,
   ) => {
     if (mutationInFlight.current || databaseUnavailable) return;
     mutationInFlight.current = true;
@@ -240,7 +241,14 @@ export function PomodoroWorkspace({
     optimistic();
     startTransition(async () => {
       try {
-        const result = await action();
+        let result = await action();
+        if (!result.ok && result.code === "SESSION_DURATION_CONFIRMATION_REQUIRED" && confirmationAction) {
+          if (!window.confirm(result.message)) {
+            rollback();
+            return;
+          }
+          result = await confirmationAction();
+        }
         if (result.ok) commit(result.data);
         else {
           rollback();
@@ -280,9 +288,10 @@ export function PomodoroWorkspace({
   const finishFocus = useCallback((advance: boolean) => {
     if (!session || disabled) return;
     const previous = session;
+    const clickedAt = new Date().toISOString();
     runAction(
       "finish",
-      () => advance ? completePomodoroSession(session.id) : (useLegacyTimerActions ? finishSession(session.id, session.note) : finishPomodoroEarly(session.id)),
+      () => advance ? completePomodoroSession(session.id, clickedAt) : (useLegacyTimerActions ? finishSession(session.id, clickedAt, session.note) : finishPomodoroEarly(session.id, clickedAt)),
       () => setSession(null),
       () => {
         setSession(null);
@@ -293,12 +302,12 @@ export function PomodoroWorkspace({
         else enterMode("short", preferences.autoStartBreak);
       },
       () => { setSession(previous); completionInFlight.current = false; },
+      () => advance ? completePomodoroSession(session.id, clickedAt, true) : (useLegacyTimerActions ? finishSession(session.id, clickedAt, session.note, true) : finishPomodoroEarly(session.id, clickedAt, true)),
     );
   }, [advanceAfterFocus, disabled, enterMode, preferences.autoStartBreak, runAction, session, useLegacyTimerActions]);
 
-  const beginFocus = useCallback(() => {
+  const beginFocus = useCallback((clickedAt = new Date().toISOString()) => {
     if (disabled || session) return;
-    const clickedAt = new Date().toISOString();
     const taskId = activeTaskId;
     const targetSeconds = preferences.focusMinutes * 60;
     runAction(
@@ -367,13 +376,13 @@ export function PomodoroWorkspace({
     }
     const clickedAt = new Date().toISOString();
     if (!session) {
-      beginFocus();
+      beginFocus(clickedAt);
     } else if (session.status === "RUNNING") {
       const previous = session;
       runAction("pause", () => useLegacyTimerActions ? pauseSession(session.id, clickedAt) : pausePomodoroSession(session.id, clickedAt), () => setSession(previewPauseSession(session, clickedAt)), setSession, () => setSession(previous));
     } else {
       const previous = session;
-      runAction("resume", () => useLegacyTimerActions ? resumeSession(session.id) : resumePomodoroSession(session.id), () => setSession(previewResumeSession(session, clickedAt)), setSession, () => setSession(previous));
+      runAction("resume", () => useLegacyTimerActions ? resumeSession(session.id, clickedAt) : resumePomodoroSession(session.id, clickedAt), () => setSession(previewResumeSession(session, clickedAt)), setSession, () => setSession(previous));
     }
   }
 

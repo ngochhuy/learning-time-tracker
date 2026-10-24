@@ -66,24 +66,50 @@ export async function pauseSession(sessionId: string, clickedAt: string): Promis
   }
 }
 
-export async function resumeSession(sessionId: string): Promise<ActionResult<TimerSession>> {
+export async function resumeSession(sessionId: string, clickedAt: string): Promise<ActionResult<TimerSession>> {
+  const diagnosticId = randomUUID();
+  const receivedAt = new Date();
   try {
     const user = await getCurrentUser();
-    const session = await resumeLearningSession(user.id, sessionIdSchema.parse(sessionId), "timer");
+    const session = await resumeLearningSession(
+      user.id,
+      sessionIdSchema.parse(sessionId),
+      clickedAt,
+      "timer",
+      receivedAt,
+      { diagnosticId, operation: "resume", sessionKind: "timer" },
+    );
     return { ok: true, data: serializeTimerSession(session) };
   } catch (error) {
-    return toActionError(error);
+    return toActionError(error, diagnosticId);
   }
 }
 
-export async function finishSession(sessionId: string, note?: string | null): Promise<ActionResult<{ id: string }>> {
+export async function finishSession(
+  sessionId: string,
+  clickedAt: string,
+  note?: string | null,
+  allowLongSession = false,
+): Promise<ActionResult<{ id: string }>> {
+  const diagnosticId = randomUUID();
+  const receivedAt = new Date();
   try {
     const user = await getCurrentUser();
-    const session = await finishLearningSession(user.id, sessionIdSchema.parse(sessionId), note, false, "timer");
+    const session = await finishLearningSession(
+      user.id,
+      sessionIdSchema.parse(sessionId),
+      clickedAt,
+      note,
+      false,
+      "timer",
+      allowLongSession,
+      receivedAt,
+      { diagnosticId, operation: "finish", sessionKind: "timer" },
+    );
     refreshCompletedSessionViews();
     return { ok: true, data: { id: session.id } };
   } catch (error) {
-    return toActionError(error);
+    return toActionError(error, diagnosticId);
   }
 }
 

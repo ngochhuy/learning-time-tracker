@@ -24,7 +24,7 @@ import { startLearningSession } from "@/lib/timer-service";
 const receivedAt = new Date("2026-10-19T01:39:26.237Z");
 const clickedAt = "2026-10-19T01:39:26.681Z";
 
-describe("timer service receive timestamp", () => {
+describe("timer service client timestamp", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
@@ -46,9 +46,9 @@ describe("timer service receive timestamp", () => {
 
   afterEach(() => vi.useRealTimers());
 
-  it("reuses one receive time if a serializable transaction is retried", async () => {
+  it("reuses one client click time if a serializable transaction is retried", async () => {
     await startLearningSession("user-1", null, clickedAt);
 
-    expect(mocks.validationTimes).toEqual([receivedAt, receivedAt]);
+    expect(mocks.validationTimes).toEqual([new Date(clickedAt), new Date(clickedAt)]);
   });
 });

@@ -46,7 +46,7 @@ describe("Pomodoro completion transaction", () => {
   it("rejects an early completion without incrementing the task", async () => {
     prepareSession(1490);
 
-    await expect(finishLearningSession("user-1", "session-1", undefined, true)).rejects.toMatchObject({ code: "POMODORO_NOT_READY" });
+    await expect(finishLearningSession("user-1", "session-1", now.toISOString(), undefined, true)).rejects.toMatchObject({ code: "POMODORO_NOT_READY" });
     expect(mocks.tx.learningSession.update).not.toHaveBeenCalled();
     expect(mocks.tx.pomodoroFocus.update).not.toHaveBeenCalled();
     expect(mocks.tx.pomodoroTask.update).not.toHaveBeenCalled();
@@ -55,7 +55,7 @@ describe("Pomodoro completion transaction", () => {
   it("caps overrun time and increments the linked task once", async () => {
     prepareSession(1800);
 
-    await finishLearningSession("user-1", "session-1", undefined, true);
+    await finishLearningSession("user-1", "session-1", now.toISOString(), undefined, true);
 
     expect(savedEndAt).toEqual(new Date(now.getTime() - 300_000));
     expect(mocks.tx.learningSession.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ durationSeconds: 1500 }) }));

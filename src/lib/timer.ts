@@ -1,9 +1,25 @@
 import type { LearningStatus } from "@/generated/prisma/client";
+import { AppError } from "@/lib/errors";
+
+export const MAX_SESSION_DURATION_SECONDS = 24 * 60 * 60;
+
+export function assertSessionDurationAllowed(durationSeconds: number, allowLongSession = false) {
+  if (durationSeconds > MAX_SESSION_DURATION_SECONDS && !allowLongSession) {
+    throw new AppError("SESSION_DURATION_CONFIRMATION_REQUIRED");
+  }
+}
 
 export type IntervalLike = {
   startedAt: Date;
   endedAt: Date | null;
 };
+
+/** Ensures a persisted session has only strictly positive, closed intervals. */
+export function assertClosedIntervalsValid(intervals: readonly IntervalLike[]) {
+  if (intervals.some((interval) => !interval.endedAt || interval.endedAt.getTime() <= interval.startedAt.getTime())) {
+    throw new AppError("INVALID_TIME_RANGE");
+  }
+}
 
 export type ActiveSessionLike = {
   id: string;

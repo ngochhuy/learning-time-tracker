@@ -50,10 +50,17 @@ export function TimerConsole({ session, categories, databaseUnavailable = false 
   const elapsed = useMemo(() => session ? getElapsedSeconds(session, now) : 0, [now, session]);
   const longRunning = elapsed >= 8 * 60 * 60;
 
-  function run(action: () => Promise<{ ok: boolean; message?: string }>) {
+  function run(
+    action: () => Promise<{ ok: boolean; message?: string; code?: string }>,
+    confirmationAction?: () => Promise<{ ok: boolean; message?: string; code?: string }>,
+  ) {
     setMessage(null);
     startTransition(async () => {
-      const result = await action();
+      let result = await action();
+      if (!result.ok && result.code === "SESSION_DURATION_CONFIRMATION_REQUIRED" && confirmationAction) {
+        if (!window.confirm(result.message ?? "Phiên học vượt quá 24 giờ. Bạn có muốn vẫn lưu phiên này không?")) return;
+        result = await confirmationAction();
+      }
       if (!result.ok) {
         setMessage(result.message ?? "Đã có lỗi xảy ra. Vui lòng thử lại.");
         return;
@@ -99,8 +106,8 @@ export function TimerConsole({ session, categories, databaseUnavailable = false 
       </label>
       <div className="timer-actions">
         {!session ? <button className="button button--primary button--large" disabled={disabled} onClick={() => run(() => startSession(selectedCategoryId || null, new Date().toISOString()))}><Play size={18} fill="currentColor" />{isPending ? "Đang bắt đầu..." : "Học ngay"}</button> : <>
-          {session.status === "RUNNING" ? <button className="button button--primary" disabled={disabled} onClick={() => run(() => pauseSession(session.id, new Date().toISOString()))}><Pause size={18} fill="currentColor" />{isPending ? "Đang lưu..." : "Tạm dừng"}</button> : <button className="button button--primary" disabled={disabled} onClick={() => run(() => resumeSession(session.id))}><Play size={18} fill="currentColor" />{isPending ? "Đang tiếp tục..." : "Tiếp tục"}</button>}
-          <button className="button button--secondary" disabled={disabled} onClick={() => run(() => finishSession(session.id))}><Square size={16} fill="currentColor" />Kết thúc</button>
+          {session.status === "RUNNING" ? <button className="button button--primary" disabled={disabled} onClick={() => run(() => pauseSession(session.id, new Date().toISOString()))}><Pause size={18} fill="currentColor" />{isPending ? "Đang lưu..." : "Tạm dừng"}</button> : <button className="button button--primary" disabled={disabled} onClick={() => run(() => resumeSession(session.id, new Date().toISOString()))}><Play size={18} fill="currentColor" />{isPending ? "Đang tiếp tục..." : "Tiếp tục"}</button>}
+          <button className="button button--secondary" disabled={disabled} onClick={() => { const clickedAt = new Date().toISOString(); run(() => finishSession(session.id, clickedAt), () => finishSession(session.id, clickedAt, undefined, true)); }}><Square size={16} fill="currentColor" />Kết thúc</button>
           <button className="icon-button" disabled={disabled} onClick={() => { if (window.confirm("Hủy phiên học hiện tại? Thời gian chưa hoàn thành sẽ không được lưu.")) run(() => cancelSession(session.id)); }} aria-label="Hủy phiên học"><RotateCcw size={18} /></button>
         </>}
       </div>

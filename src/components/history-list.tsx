@@ -48,7 +48,13 @@ export function HistoryList({ initialItems, categories }: { initialItems: Histor
     const endedAt = String(form.get("endedAt"));
     const categoryId = String(form.get("categoryId") || "") || null;
     startTransition(async () => {
-      const result = await updateSession(editing.id, toIso(startedAt), toIso(endedAt), categoryId);
+      const startIso = toIso(startedAt);
+      const endIso = toIso(endedAt);
+      let result = await updateSession(editing.id, startIso, endIso, categoryId);
+      if (!result.ok && result.code === "SESSION_DURATION_CONFIRMATION_REQUIRED") {
+        if (!window.confirm(result.message)) return;
+        result = await updateSession(editing.id, startIso, endIso, categoryId, undefined, true);
+      }
       if (!result.ok) return setMessage({ type: "error", text: result.message });
       const category = categories.find((entry) => entry.id === categoryId) ?? null;
       setItems((current) => current.map((item) => item.id === editing.id ? {

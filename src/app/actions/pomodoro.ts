@@ -94,13 +94,25 @@ export async function startPomodoroSession(clickedAt: string, taskId: string | n
   } catch (error) { return toActionError(error, diagnosticId); }
 }
 
-export async function completePomodoroSession(sessionId: string): Promise<ActionResult<{ id: string }>> {
+export async function completePomodoroSession(sessionId: string, clickedAt: string, allowLongSession = false): Promise<ActionResult<{ id: string }>> {
+  const diagnosticId = randomUUID();
+  const receivedAt = new Date();
   try {
     const user = await getCurrentUser();
-    const session = await finishLearningSession(user.id, id.parse(sessionId), undefined, true, "pomodoro");
+    const session = await finishLearningSession(
+      user.id,
+      id.parse(sessionId),
+      clickedAt,
+      undefined,
+      true,
+      "pomodoro",
+      allowLongSession,
+      receivedAt,
+      { diagnosticId, operation: "finish", sessionKind: "pomodoro" },
+    );
     revalidatePomodoroViews();
     return { ok: true, data: { id: session.id } };
-  } catch (error) { return toActionError(error); }
+  } catch (error) { return toActionError(error, diagnosticId); }
 }
 
 export async function pausePomodoroSession(sessionId: string, clickedAt: string): Promise<ActionResult<TimerSession>> {
@@ -121,12 +133,26 @@ export async function pausePomodoroSession(sessionId: string, clickedAt: string)
   } catch (error) { return toActionError(error, diagnosticId); }
 }
 
-export async function resumePomodoroSession(sessionId: string): Promise<ActionResult<TimerSession>> {
-  try { const user = await getCurrentUser(); const session = await resumeLearningSession(user.id, id.parse(sessionId), "pomodoro"); revalidatePomodoroViews(); return { ok: true, data: serializeTimerSession(session) }; } catch (error) { return toActionError(error); }
+export async function resumePomodoroSession(sessionId: string, clickedAt: string): Promise<ActionResult<TimerSession>> {
+  const diagnosticId = randomUUID();
+  const receivedAt = new Date();
+  try {
+    const user = await getCurrentUser();
+    const session = await resumeLearningSession(user.id, id.parse(sessionId), clickedAt, "pomodoro", receivedAt, { diagnosticId, operation: "resume", sessionKind: "pomodoro" });
+    revalidatePomodoroViews();
+    return { ok: true, data: serializeTimerSession(session) };
+  } catch (error) { return toActionError(error, diagnosticId); }
 }
 
-export async function finishPomodoroEarly(sessionId: string): Promise<ActionResult<{ id: string }>> {
-  try { const user = await getCurrentUser(); const session = await finishLearningSession(user.id, id.parse(sessionId), undefined, false, "pomodoro"); for (const path of ["/", "/pomodoro", "/dashboard", "/history", "/categories"]) revalidatePath(path); return { ok: true, data: { id: session.id } }; } catch (error) { return toActionError(error); }
+export async function finishPomodoroEarly(sessionId: string, clickedAt: string, allowLongSession = false): Promise<ActionResult<{ id: string }>> {
+  const diagnosticId = randomUUID();
+  const receivedAt = new Date();
+  try {
+    const user = await getCurrentUser();
+    const session = await finishLearningSession(user.id, id.parse(sessionId), clickedAt, undefined, false, "pomodoro", allowLongSession, receivedAt, { diagnosticId, operation: "finish", sessionKind: "pomodoro" });
+    for (const path of ["/", "/pomodoro", "/dashboard", "/history", "/categories"]) revalidatePath(path);
+    return { ok: true, data: { id: session.id } };
+  } catch (error) { return toActionError(error, diagnosticId); }
 }
 
 export async function cancelPomodoroSession(sessionId: string): Promise<ActionResult> {
