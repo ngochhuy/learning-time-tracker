@@ -31,18 +31,20 @@ export class AppError extends Error {
 
 export type ActionResult<T = undefined> =
   | { ok: true; data: T }
-  | { ok: false; code: AppErrorCode; message: string };
+  | { ok: false; code: AppErrorCode; message: string; diagnosticId?: string };
 
-export function toActionError(error: unknown): ActionResult<never> {
+export function toActionError(error: unknown, diagnosticId?: string): ActionResult<never> {
+  const diagnostic = diagnosticId ? { diagnosticId } : {};
   if (error instanceof AppError) {
-    return { ok: false, code: error.code, message: error.message };
+    return { ok: false, code: error.code, message: error.message, ...diagnostic };
   }
   logger.error("application_action_error", {
     error,
+    ...diagnostic,
     ...(process.env.NODE_ENV !== "production" && error instanceof Error ? { detail: error.message } : {}),
   });
   if (error instanceof Error && error.name === "PrismaClientValidationError") {
-    return { ok: false, code: "PRISMA_CLIENT_OUTDATED", message: errorMessages.PRISMA_CLIENT_OUTDATED };
+    return { ok: false, code: "PRISMA_CLIENT_OUTDATED", message: errorMessages.PRISMA_CLIENT_OUTDATED, ...diagnostic };
   }
-  return { ok: false, code: "UNKNOWN", message: errorMessages.UNKNOWN };
+  return { ok: false, code: "UNKNOWN", message: errorMessages.UNKNOWN, ...diagnostic };
 }

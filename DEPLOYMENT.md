@@ -28,7 +28,13 @@ GOOGLE_CLIENT_ID=<Google OAuth client ID>
 GOOGLE_CLIENT_SECRET=<Google OAuth client secret>
 DEV_AUTH_BYPASS=false
 LOG_LEVEL=info
+TIMESTAMP_DIAGNOSTICS=false
 ```
+
+Khi cần chẩn đoán `INVALID_TIME_RANGE`, đặt `TIMESTAMP_DIAGNOSTICS=true` rồi
+redeploy. Timestamp bị từ chối luôn được ghi log kèm `diagnosticId`; khi bật biến
+này, timestamp được chấp nhận cũng được ghi để đối chiếu. Đặt lại `false` sau khi
+đã thu thập đủ dữ liệu chẩn đoán.
 
 `DIRECT_URL` không cần có ở Vercel runtime nếu migrations đã chạy riêng. Không commit `.env`.
 

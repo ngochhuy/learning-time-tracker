@@ -1,7 +1,11 @@
 import { LearningStatus, Prisma } from "@/generated/prisma/client";
 import { AppError } from "@/lib/errors";
 import { getClosedDurationSeconds } from "@/lib/timer";
-import { validatePauseTimestamp, validateStartTimestamp } from "@/lib/timer-timestamp";
+import {
+  validatePauseTimestamp,
+  validateStartTimestamp,
+  type TimestampValidationContext,
+} from "@/lib/timer-timestamp";
 import { runSerializable } from "@/lib/transactions";
 import { db } from "@/lib/db";
 import { normalizeSessionNote } from "@/lib/session-note";
@@ -55,7 +59,15 @@ export async function getActiveSession(userId: string): Promise<ActiveSession | 
   });
 }
 
-export async function startLearningSession(userId: string, categoryId: string | null, clickedAt: string, note?: string | null, pomodoro?: { targetSeconds: number; taskId: string | null; categoryId?: string | null }, receivedAt: Date = new Date()) {
+export async function startLearningSession(
+  userId: string,
+  categoryId: string | null,
+  clickedAt: string,
+  note?: string | null,
+  pomodoro?: { targetSeconds: number; taskId: string | null; categoryId?: string | null },
+  receivedAt: Date = new Date(),
+  timestampContext?: TimestampValidationContext,
+) {
   const normalizedNote = normalizeSessionNote(note);
   try {
     return await runSerializable(async (tx) => {
@@ -76,7 +88,7 @@ export async function startLearningSession(userId: string, categoryId: string | 
         await verifyCategory(tx, userId, pomodoro.categoryId);
       }
 
-      const now = validateStartTimestamp(clickedAt, receivedAt);
+      const now = validateStartTimestamp(clickedAt, receivedAt, timestampContext);
       const session = await tx.learningSession.create({
         data: {
           userId,
@@ -102,7 +114,14 @@ export async function startLearningSession(userId: string, categoryId: string | 
   }
 }
 
-export async function pauseLearningSession(userId: string, sessionId: string, clickedAt: string, kind: SessionKind = "timer", receivedAt: Date = new Date()) {
+export async function pauseLearningSession(
+  userId: string,
+  sessionId: string,
+  clickedAt: string,
+  kind: SessionKind = "timer",
+  receivedAt: Date = new Date(),
+  timestampContext?: TimestampValidationContext,
+) {
   return runSerializable(async (tx) => {
     const session = await getOwnedSession(tx, userId, sessionId);
     assertSessionKind(session, kind);
@@ -111,7 +130,7 @@ export async function pauseLearningSession(userId: string, sessionId: string, cl
     const openInterval = session.intervals.find((interval) => !interval.endedAt);
     if (!openInterval) throw new AppError("INVALID_SESSION_STATE");
 
-    const endedAt = validatePauseTimestamp(clickedAt, openInterval.startedAt, receivedAt);
+    const endedAt = validatePauseTimestamp(clickedAt, openInterval.startedAt, receivedAt, timestampContext);
     await tx.sessionInterval.update({ where: { id: openInterval.id }, data: { endedAt } });
     return tx.learningSession.update({
       where: { id: session.id },

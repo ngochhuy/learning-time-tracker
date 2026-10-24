@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/current-user";
@@ -27,24 +28,41 @@ function refreshCompletedSessionViews() {
 }
 
 export async function startSession(categoryId: string | null, clickedAt: string, note?: string | null): Promise<ActionResult<TimerSession>> {
+  const diagnosticId = randomUUID();
   const receivedAt = new Date();
   try {
     const user = await getCurrentUser();
-    const session = await startLearningSession(user.id, optionalId.parse(categoryId) ?? null, clickedAt, note, undefined, receivedAt);
+    const session = await startLearningSession(
+      user.id,
+      optionalId.parse(categoryId) ?? null,
+      clickedAt,
+      note,
+      undefined,
+      receivedAt,
+      { diagnosticId, operation: "start", sessionKind: "timer" },
+    );
     return { ok: true, data: serializeTimerSession(session) };
   } catch (error) {
-    return toActionError(error);
+    return toActionError(error, diagnosticId);
   }
 }
 
 export async function pauseSession(sessionId: string, clickedAt: string): Promise<ActionResult<TimerSession>> {
+  const diagnosticId = randomUUID();
   const receivedAt = new Date();
   try {
     const user = await getCurrentUser();
-    const session = await pauseLearningSession(user.id, sessionIdSchema.parse(sessionId), clickedAt, "timer", receivedAt);
+    const session = await pauseLearningSession(
+      user.id,
+      sessionIdSchema.parse(sessionId),
+      clickedAt,
+      "timer",
+      receivedAt,
+      { diagnosticId, operation: "pause", sessionKind: "timer" },
+    );
     return { ok: true, data: serializeTimerSession(session) };
   } catch (error) {
-    return toActionError(error);
+    return toActionError(error, diagnosticId);
   }
 }
 

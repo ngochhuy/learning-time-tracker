@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/current-user";
@@ -75,13 +76,22 @@ export async function updatePomodoroPreferences(data: PomodoroPreferencesData): 
 }
 
 export async function startPomodoroSession(clickedAt: string, taskId: string | null, targetMinutes: number): Promise<ActionResult<TimerSession>> {
+  const diagnosticId = randomUUID();
   const receivedAt = new Date();
   try {
     const user = await getCurrentUser();
     const targetSeconds = z.number().int().min(15).max(60).parse(targetMinutes) * 60;
-    const session = await startLearningSession(user.id, null, clickedAt, null, { taskId: taskId ? id.parse(taskId) : null, targetSeconds }, receivedAt);
+    const session = await startLearningSession(
+      user.id,
+      null,
+      clickedAt,
+      null,
+      { taskId: taskId ? id.parse(taskId) : null, targetSeconds },
+      receivedAt,
+      { diagnosticId, operation: "start", sessionKind: "pomodoro" },
+    );
     return { ok: true, data: serializeTimerSession(session) };
-  } catch (error) { return toActionError(error); }
+  } catch (error) { return toActionError(error, diagnosticId); }
 }
 
 export async function completePomodoroSession(sessionId: string): Promise<ActionResult<{ id: string }>> {
@@ -94,8 +104,21 @@ export async function completePomodoroSession(sessionId: string): Promise<Action
 }
 
 export async function pausePomodoroSession(sessionId: string, clickedAt: string): Promise<ActionResult<TimerSession>> {
+  const diagnosticId = randomUUID();
   const receivedAt = new Date();
-  try { const user = await getCurrentUser(); const session = await pauseLearningSession(user.id, id.parse(sessionId), clickedAt, "pomodoro", receivedAt); revalidatePomodoroViews(); return { ok: true, data: serializeTimerSession(session) }; } catch (error) { return toActionError(error); }
+  try {
+    const user = await getCurrentUser();
+    const session = await pauseLearningSession(
+      user.id,
+      id.parse(sessionId),
+      clickedAt,
+      "pomodoro",
+      receivedAt,
+      { diagnosticId, operation: "pause", sessionKind: "pomodoro" },
+    );
+    revalidatePomodoroViews();
+    return { ok: true, data: serializeTimerSession(session) };
+  } catch (error) { return toActionError(error, diagnosticId); }
 }
 
 export async function resumePomodoroSession(sessionId: string): Promise<ActionResult<TimerSession>> {

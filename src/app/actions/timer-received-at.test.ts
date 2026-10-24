@@ -26,6 +26,7 @@ vi.mock("@/lib/timer-service", () => ({
 
 import { pauseSession, startSession } from "@/app/actions/timer";
 import { pausePomodoroSession, startPomodoroSession } from "@/app/actions/pomodoro";
+import { AppError } from "@/lib/errors";
 
 const serverReceivedAt = new Date("2026-10-19T01:39:26.237Z");
 const afterAuthentication = new Date("2026-10-19T01:39:27.000Z");
@@ -65,6 +66,11 @@ describe("timer action receive timestamps", () => {
       "",
       undefined,
       serverReceivedAt,
+      expect.objectContaining({
+        diagnosticId: expect.any(String),
+        operation: "start",
+        sessionKind: "timer",
+      }),
     );
 
     vi.setSystemTime(serverReceivedAt);
@@ -75,6 +81,11 @@ describe("timer action receive timestamps", () => {
       clickedAt,
       "timer",
       serverReceivedAt,
+      expect.objectContaining({
+        diagnosticId: expect.any(String),
+        operation: "pause",
+        sessionKind: "timer",
+      }),
     );
   });
 
@@ -87,6 +98,11 @@ describe("timer action receive timestamps", () => {
       null,
       { taskId: null, targetSeconds: 1_500 },
       serverReceivedAt,
+      expect.objectContaining({
+        diagnosticId: expect.any(String),
+        operation: "start",
+        sessionKind: "pomodoro",
+      }),
     );
 
     vi.setSystemTime(serverReceivedAt);
@@ -97,6 +113,35 @@ describe("timer action receive timestamps", () => {
       clickedAt,
       "pomodoro",
       serverReceivedAt,
+      expect.objectContaining({
+        diagnosticId: expect.any(String),
+        operation: "pause",
+        sessionKind: "pomodoro",
+      }),
     );
+  });
+
+  it("returns a diagnostic ID when Timer timestamp validation fails", async () => {
+    mocks.startLearningSession.mockRejectedValueOnce(new AppError("INVALID_TIME_RANGE"));
+
+    const result = await startSession(null, clickedAt, "");
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "INVALID_TIME_RANGE",
+      diagnosticId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+    });
+  });
+
+  it("returns a diagnostic ID when Pomodoro timestamp validation fails", async () => {
+    mocks.pauseLearningSession.mockRejectedValueOnce(new AppError("INVALID_TIME_RANGE"));
+
+    const result = await pausePomodoroSession("session-1", clickedAt);
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: "INVALID_TIME_RANGE",
+      diagnosticId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+    });
   });
 });

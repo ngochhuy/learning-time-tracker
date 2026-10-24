@@ -14,8 +14,16 @@ export const logger = {
   error(event: string, context: LogContext = {}) {
     console.error(JSON.stringify({ level: "error", event, timestamp: new Date().toISOString(), ...sanitize(context) }));
   },
+  warn(event: string, context: LogContext = {}) {
+    console.warn(JSON.stringify({ level: "warn", event, timestamp: new Date().toISOString(), ...sanitize(context) }));
+  },
   info(event: string, context: LogContext = {}) {
     if (process.env.LOG_LEVEL === "debug" || process.env.NODE_ENV !== "production") {
+      console.info(JSON.stringify({ level: "info", event, timestamp: new Date().toISOString(), ...sanitize(context) }));
+    }
+  },
+  diagnostic(event: string, context: LogContext = {}) {
+    if (process.env.TIMESTAMP_DIAGNOSTICS === "true") {
       console.info(JSON.stringify({ level: "info", event, timestamp: new Date().toISOString(), ...sanitize(context) }));
     }
   },
